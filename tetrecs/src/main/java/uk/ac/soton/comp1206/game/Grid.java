@@ -1,5 +1,7 @@
 package uk.ac.soton.comp1206.game;
 
+import java.io.Console;
+
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 
@@ -101,6 +103,39 @@ public class Grid {
      */
     public int getRows() {
         return rows;
+    }
+
+    public Boolean canPlayPiece(GamePiece gamePiece, int placeX, int placeY) {
+        placeX -= 1;
+        placeY -= 1;
+        int[][] gamePieceBlocks = gamePiece.getBlocks();
+
+        for (int x = 0; x < gamePieceBlocks.length; x++) {
+            for (int y = 0; y < gamePieceBlocks[x].length; y++) {
+                int value = gamePieceBlocks[x][y];
+                if (value == 0) continue;
+                int grid = get(x + placeX, y + placeY);
+                if(grid > 0) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    public void playPiece(GamePiece gamePiece, int placeX, int placeY) {
+        placeX -=1;
+        placeY -=1;
+        int[][] gamePieceBlocks = gamePiece.getBlocks();
+
+        for(int x = 0; x < gamePieceBlocks.length; x++) {
+            for(int y = 0; y < gamePieceBlocks[x].length; y++) {
+                int value = gamePieceBlocks[x][y];
+                if(value == 0) continue;
+
+                set(x+placeX, y + placeY, value);
+            }
+        }
     }
 
 }

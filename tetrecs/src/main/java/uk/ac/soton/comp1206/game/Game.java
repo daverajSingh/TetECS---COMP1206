@@ -4,6 +4,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.GameBlock;
 
+import java.util.Random;
+
 /**
  * The Game class handles the main logic, state and properties of the TetrECS game. Methods to manipulate the game state
  * and to handle actions made by the player should take place inside this class.
@@ -27,6 +29,7 @@ public class Game {
      */
     protected final Grid grid;
 
+    protected GamePiece currentPiece;
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
      * @param cols number of columns
@@ -53,6 +56,7 @@ public class Game {
      */
     public void initialiseGame() {
         logger.info("Initialising game");
+        currentPiece = spawnPiece();
     }
 
     /**
@@ -63,16 +67,44 @@ public class Game {
         //Get the position of this block
         int x = gameBlock.getX();
         int y = gameBlock.getY();
-
-        //Get the new value for this block
-        int previousValue = grid.get(x,y);
-        int newValue = previousValue + 1;
-        if (newValue  > GamePiece.PIECES) {
-            newValue = 0;
+        if(grid.canPlayPiece(currentPiece, x, y)) {
+            grid.playPiece(currentPiece, x, y);
+            nextPiece();
+            afterPiece();
         }
+    }
+    public void afterPiece() {
+        for(int x=0; x < cols; x++) {
+            int count = 0;
+            for(int y=0; y < rows; y++) {
+                if(grid.get(x,y) == 0) break;
+                count+=1;
+            }
+            if(count == rows) {
+                clearRow(x);
+            }
+        }
+        for(int y=0; y < rows; y++) {
+            int count = 0;
+            for(int x=0; x < cols; x++) {
+                if(grid.get(x,y) == 0) break;
+                count+=1;
+            }
+            if(count == cols) {
+                clearCol(y);
+            }
+        }
+    }
 
-        //Update the grid with the new value
-        grid.set(x,y,newValue);
+    public void clearRow(int row) {
+        for(int col = 0; col < cols; col++) {
+            grid.set(col, row, 0);
+        }
+    }
+    public void clearCol(int col) {
+        for(int row = 0; row < rows; row++) {
+            grid.set(col, row, 0);
+        }
     }
 
     /**
@@ -97,6 +129,17 @@ public class Game {
      */
     public int getRows() {
         return rows;
+    }
+
+    public GamePiece spawnPiece() {
+        Random random = new Random();
+        int randomNum = random.nextInt(15);
+        GamePiece gamePiece = GamePiece.createPiece(randomNum);
+        return gamePiece;
+    }
+
+    public void nextPiece() {
+        currentPiece = spawnPiece();
     }
 
 
