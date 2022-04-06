@@ -1,5 +1,7 @@
 package uk.ac.soton.comp1206.game;
 
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.GameBlock;
@@ -30,6 +32,11 @@ public class Game {
     protected final Grid grid;
 
     protected GamePiece currentPiece;
+
+    protected IntegerProperty score = new SimpleIntegerProperty(0);
+    protected IntegerProperty level = new SimpleIntegerProperty(0);
+    protected IntegerProperty lives = new SimpleIntegerProperty(3);
+    protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
      * @param cols number of columns
@@ -41,6 +48,22 @@ public class Game {
 
         //Create a new grid model to represent the game state
         this.grid = new Grid(cols,rows);
+    }
+
+    public IntegerProperty livesProperty() {
+        return lives;
+    }
+
+    public IntegerProperty scoreProperty() {
+        return score;
+    }
+
+    public IntegerProperty levelProperty() {
+        return level;
+    }
+
+    public IntegerProperty multiplierProperty() {
+        return multiplier;
     }
 
     /**
@@ -74,36 +97,48 @@ public class Game {
         }
     }
     public void afterPiece() {
+        int countX = 0;
+        int countY = 0;
+        int[] arrayX = new int[cols];
+        int[] arrayY = new int[rows];
         for(int x=0; x < cols; x++) {
-            int count = 0;
             for(int y=0; y < rows; y++) {
                 if(grid.get(x,y) == 0) break;
-                count+=1;
+                countX+=1;
             }
-            if(count == rows) {
-                clearRow(x);
+            if(countX == rows) {
+                arrayX[x] = 1;
             }
         }
         for(int y=0; y < rows; y++) {
-            int count = 0;
             for(int x=0; x < cols; x++) {
                 if(grid.get(x,y) == 0) break;
-                count+=1;
+                countY+=1;
             }
-            if(count == cols) {
-                clearCol(y);
+            if(countY == cols) {
+                arrayY[y] = 1;
             }
         }
+        clearCol(arrayY);
+        clearRow(arrayX);
     }
 
-    public void clearRow(int row) {
-        for(int col = 0; col < cols; col++) {
-            grid.set(col, row, 0);
+    public void clearRow(int[] row) {
+        for (int i : row) {
+            if(i == 1) {
+                for (int col = 0; col < cols; col++) {
+                    grid.set(col, i, 0);
+                }
+            }
         }
     }
-    public void clearCol(int col) {
-        for(int row = 0; row < rows; row++) {
-            grid.set(col, row, 0);
+    public void clearCol(int[] col) {
+        for (int i : col) {
+            if(i == 1) {
+                for (int row = 0; row < rows; row++) {
+                    grid.set(i, row, 0);
+                }
+            }
         }
     }
 

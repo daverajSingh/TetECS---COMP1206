@@ -1,5 +1,7 @@
 package uk.ac.soton.comp1206.scene;
 
+import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.layout.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,6 +44,14 @@ public class ChallengeScene extends BaseScene {
         challengePane.setMaxHeight(gameWindow.getHeight());
         challengePane.getStyleClass().add("menu-background");
         root.getChildren().add(challengePane);
+
+        var score = new Label(game.scoreProperty().asString().get());
+        var level = new Label(game.levelProperty().asString().get());
+        var multiplier = new Label(game.multiplierProperty().asString().get());
+        var lives = new Label(game.livesProperty().asString().get());
+        HBox stats = new HBox(20, score, level, multiplier, lives);
+        challengePane.getChildren().add(stats);
+        stats.setAlignment(Pos.TOP_CENTER);
 
         var mainPane = new BorderPane();
         challengePane.getChildren().add(mainPane);
