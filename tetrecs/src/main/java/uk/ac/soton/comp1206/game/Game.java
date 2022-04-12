@@ -6,6 +6,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.GameBlock;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 
 /**
@@ -97,48 +99,60 @@ public class Game {
         }
     }
     public void afterPiece() {
-        int countX = 0;
-        int countY = 0;
-        int[] arrayX = new int[cols];
-        int[] arrayY = new int[rows];
-        for(int x=0; x < cols; x++) {
+        int lines = 0;
+        HashSet<int[]> blocksToBeCleared = new HashSet<>();
+
+        for(int x=0; x < cols; x++) { //Vertical
+            int countX = 0;
             for(int y=0; y < rows; y++) {
                 if(grid.get(x,y) == 0) break;
                 countX+=1;
             }
             if(countX == rows) {
-                arrayX[x] = 1;
+                lines+=1;
+                for(int y=0; y < rows; y++) {
+                    int[] coordinate = new int[]{x,y};
+                    blocksToBeCleared.add(coordinate);
+                }
             }
         }
-        for(int y=0; y < rows; y++) {
+
+        for(int y=0; y < rows; y++) {//Horizontal
+            int countY = 0;
             for(int x=0; x < cols; x++) {
                 if(grid.get(x,y) == 0) break;
                 countY+=1;
             }
             if(countY == cols) {
-                arrayY[y] = 1;
+                lines+=1;
+                for(int x=0; x < cols; x++) {
+                    int[] coordinate = new int[]{x,y};
+                    blocksToBeCleared.add(coordinate);
+                }
             }
         }
-        clearCol(arrayY);
-        clearRow(arrayX);
+
+        if(lines>0){
+            clear(blocksToBeCleared);
+            score(lines, blocksToBeCleared.size());
+            this.multiplier.add(1);
+        } else {
+            this.multiplier.set(1);
+        }
     }
 
-    public void clearRow(int[] row) {
-        for (int i : row) {
-            if(i == 1) {
-                for (int col = 0; col < cols; col++) {
-                    grid.set(col, i, 0);
-                }
-            }
+    public void clear(HashSet<int[]> blocks) {
+        for (int[] block: blocks) {
+            grid.set(block[0], block[1], 0);
         }
     }
-    public void clearCol(int[] col) {
-        for (int i : col) {
-            if(i == 1) {
-                for (int row = 0; row < rows; row++) {
-                    grid.set(i, row, 0);
-                }
-            }
+
+    public void score(int lines, int blocks){
+        int scoreToAdd = lines*blocks*10*this.multiplier.get();
+        this.score.add(scoreToAdd);
+        int level = this.score.get() / 1000;
+        if(this.level.get() != level) {
+            this.level.set(level);
         }
     }
 
