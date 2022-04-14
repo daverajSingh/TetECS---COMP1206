@@ -1,13 +1,22 @@
 package uk.ac.soton.comp1206.scene;
 
 import javafx.event.ActionEvent;
-import javafx.scene.control.Button;
+import javafx.event.EventHandler;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.DragEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
+
+import javax.script.Bindings;
 
 /**
  * The main menu of the game. Provides a gateway to the rest of the game.
@@ -15,6 +24,8 @@ import uk.ac.soton.comp1206.ui.GameWindow;
 public class MenuScene extends BaseScene {
 
     private static final Logger logger = LogManager.getLogger(MenuScene.class);
+
+    private Multimedia multimedia = new Multimedia();
 
     /**
      * Create a new menu scene
@@ -43,17 +54,38 @@ public class MenuScene extends BaseScene {
         var mainPane = new BorderPane();
         menuPane.getChildren().add(mainPane);
 
-        //Awful title
-        var title = new Text("TetrECS");
-        title.getStyleClass().add("title");
-        mainPane.setTop(title);
+        //Better title
+        Image titleImage = new Image(MenuScene.class.getResource("/images/TetrECS.png").toExternalForm());
+        ImageView imageView = new ImageView(titleImage);
+        imageView.setPreserveRatio(true);
+        imageView.setFitHeight(150);
+        imageView.setTranslateY(-200);
+        menuPane.getChildren().add(imageView);
+
+        this.multimedia.playBackgroundMusic("menu.mp3");
 
         //For now, let us just add a button that starts the game. I'm sure you'll do something way better.
-        var button = new Button("Play");
-        mainPane.setCenter(button);
+        var singlePlayer = new Button("Single Player");
+        var multiPlayer = new Button("Multi Player");
+        var instructions = new Button("How to Play");
+        var exit = new Button("Exit");
+
+
+        singlePlayer.setBackground(null);
+        multiPlayer.setBackground(null);
+        instructions.setBackground(null);
+        exit.setBackground(null);
+
+
+        var vbox = new VBox(20, singlePlayer, multiPlayer, instructions, exit);
+        menuPane.getChildren().add(vbox);
+
+        vbox.getStyleClass().add("menuItem");
+        vbox.setAlignment(Pos.BOTTOM_CENTER);
 
         //Bind the button action to the startGame method in the menu
-        button.setOnAction(this::startGame);
+        singlePlayer.setOnAction(this::startGame);
+
     }
 
     /**
@@ -70,6 +102,7 @@ public class MenuScene extends BaseScene {
      */
     private void startGame(ActionEvent event) {
         gameWindow.startChallenge();
+        this.multimedia.stopBackground();
     }
 
 }

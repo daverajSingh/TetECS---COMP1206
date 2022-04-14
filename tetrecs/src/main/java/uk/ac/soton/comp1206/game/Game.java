@@ -4,7 +4,9 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
+import uk.ac.soton.comp1206.scene.ChallengeScene;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,6 +41,9 @@ public class Game {
     protected IntegerProperty level = new SimpleIntegerProperty(0);
     protected IntegerProperty lives = new SimpleIntegerProperty(3);
     protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
+
+    private Multimedia multimedia = new Multimedia();
+
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
      * @param cols number of columns

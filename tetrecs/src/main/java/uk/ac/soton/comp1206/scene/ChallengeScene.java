@@ -3,10 +3,13 @@ package uk.ac.soton.comp1206.scene;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
+import javafx.scene.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBoard;
+import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
@@ -18,6 +21,8 @@ public class ChallengeScene extends BaseScene {
 
     private static final Logger logger = LogManager.getLogger(MenuScene.class);
     protected Game game;
+
+    private Multimedia multimedia = new Multimedia();
 
     /**
      * Create a new Single Player challenge scene
@@ -45,13 +50,26 @@ public class ChallengeScene extends BaseScene {
         challengePane.getStyleClass().add("menu-background");
         root.getChildren().add(challengePane);
 
-        var score = new Label(game.scoreProperty().asString().get());
-        var level = new Label(game.levelProperty().asString().get());
-        var multiplier = new Label(game.multiplierProperty().asString().get());
-        var lives = new Label(game.livesProperty().asString().get());
+        var score = new Text("Points: " + game.scoreProperty().asString().getValue());
+        var level = new Text("Level: " + game.levelProperty().asString().getValue() );
+        var multiplier = new Text("Multiplier: " + game.multiplierProperty().asString().getValue());
+        var lives = new Text("Lives: " + game.livesProperty().asString().getValue());
+
+        score.getStyleClass().add("heading");
+        level.getStyleClass().add("heading");
+        multiplier.getStyleClass().add("heading");
+        lives.getStyleClass().add("heading");
+
         HBox stats = new HBox(20, score, level, multiplier, lives);
+
         challengePane.getChildren().add(stats);
         stats.setAlignment(Pos.TOP_CENTER);
+
+        var pieceBoard = new PieceBoard(3,3,100,100);
+        var stackPane = new StackPane();
+        stackPane.getChildren().add(pieceBoard);
+        stackPane.setAlignment(Pos.CENTER_RIGHT);
+        challengePane.getChildren().add(stackPane);
 
         var mainPane = new BorderPane();
         challengePane.getChildren().add(mainPane);
@@ -88,6 +106,7 @@ public class ChallengeScene extends BaseScene {
     public void initialise() {
         logger.info("Initialising Challenge");
         game.start();
+        this.multimedia.playBackgroundMusic("game.wav");
     }
 
 }
