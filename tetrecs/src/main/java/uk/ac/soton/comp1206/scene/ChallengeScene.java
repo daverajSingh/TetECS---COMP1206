@@ -1,7 +1,7 @@
 package uk.ac.soton.comp1206.scene;
 
 import javafx.geometry.Pos;
-import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import org.apache.logging.log4j.LogManager;
@@ -11,6 +11,7 @@ import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBoard;
 import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
+import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
@@ -23,6 +24,9 @@ public class ChallengeScene extends BaseScene {
     protected Game game;
 
     private Multimedia multimedia = new Multimedia();
+
+    private PieceBoard pieceBoard;
+    private GamePiece currentPiece;
 
     /**
      * Create a new Single Player challenge scene
@@ -50,8 +54,8 @@ public class ChallengeScene extends BaseScene {
         challengePane.getStyleClass().add("menu-background");
         root.getChildren().add(challengePane);
 
-        var score = new Text("Points: " + game.scoreProperty().asString().getValue());
-        var level = new Text("Level: " + game.levelProperty().asString().getValue() );
+        var score = new Text("Score: " + game.scoreProperty().asString().getValue());
+        var level = new Text("Level: " + game.levelProperty().asString().getValue());
         var multiplier = new Text("Multiplier: " + game.multiplierProperty().asString().getValue());
         var lives = new Text("Lives: " + game.livesProperty().asString().getValue());
 
@@ -65,7 +69,7 @@ public class ChallengeScene extends BaseScene {
         challengePane.getChildren().add(stats);
         stats.setAlignment(Pos.TOP_CENTER);
 
-        var pieceBoard = new PieceBoard(3,3,100,100);
+        pieceBoard = new PieceBoard(3,3,100,100);
         var stackPane = new StackPane();
         stackPane.getChildren().add(pieceBoard);
         stackPane.setAlignment(Pos.CENTER_RIGHT);
@@ -107,6 +111,21 @@ public class ChallengeScene extends BaseScene {
         logger.info("Initialising Challenge");
         game.start();
         this.multimedia.playBackgroundMusic("game.wav");
+        //Escape Key Event
+        scene.setOnKeyPressed(keyEvent -> {
+            if(keyEvent.getCode() == KeyCode.ESCAPE) {
+                multimedia.stopBackground();
+                gameWindow.startMenu();
+                logger.info("Escape Pressed");
+            }
+        });
+
+        //Setting Piece Listener
+        game.setNextPieceListener(this::nextPiece);
+    }
+
+    protected void nextPiece(GamePiece gamePiece) {
+        pieceBoard.pieceToDisplay(gamePiece);
     }
 
 }

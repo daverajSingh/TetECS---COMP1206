@@ -6,9 +6,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
-import uk.ac.soton.comp1206.scene.ChallengeScene;
+import uk.ac.soton.comp1206.event.NextPieceListener;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -43,6 +42,8 @@ public class Game {
     protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
 
     private Multimedia multimedia = new Multimedia();
+
+    protected NextPieceListener nextPieceListener;
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -194,7 +195,11 @@ public class Game {
 
     public void nextPiece() {
         currentPiece = spawnPiece();
+        nextPieceListener.nextPiece(currentPiece);
     }
 
+    public void setNextPieceListener(NextPieceListener nextPieceListener) {
+        this.nextPieceListener = nextPieceListener;
+    }
 
 }

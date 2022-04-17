@@ -9,8 +9,12 @@ public class PieceBoard extends GameBoard{
         super(cols, rows, width, height);
     }
 
+
+
     public void pieceToDisplay(GamePiece gamePiece) {
+        this.grid.clearGrid();
         this.grid.playPiece(gamePiece, 1,1);
+
     }
 
 }
