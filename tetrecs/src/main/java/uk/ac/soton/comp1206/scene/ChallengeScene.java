@@ -2,6 +2,7 @@ package uk.ac.soton.comp1206.scene;
 
 import javafx.geometry.Pos;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import org.apache.logging.log4j.LogManager;
@@ -9,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBoard;
-import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.ui.GamePane;
@@ -23,10 +23,17 @@ public class ChallengeScene extends BaseScene {
     private static final Logger logger = LogManager.getLogger(MenuScene.class);
     protected Game game;
 
-    private Multimedia multimedia = new Multimedia();
+    protected Multimedia multimedia = new Multimedia();
 
-    private PieceBoard pieceBoard;
-    private GamePiece currentPiece;
+    protected GameBoard pieceBoard;
+
+    protected GameBoard followingPieceBoard;
+
+    protected GameBoard board;
+
+    protected int blockX;
+
+    protected int blockY;
 
     /**
      * Create a new Single Player challenge scene
@@ -45,6 +52,8 @@ public class ChallengeScene extends BaseScene {
         logger.info("Building " + this.getClass().getName());
 
         setupGame();
+
+        this.scene = gameWindow.getScene();
 
         root = new GamePane(gameWindow.getWidth(),gameWindow.getHeight());
 
@@ -69,20 +78,40 @@ public class ChallengeScene extends BaseScene {
         challengePane.getChildren().add(stats);
         stats.setAlignment(Pos.TOP_CENTER);
 
-        pieceBoard = new PieceBoard(3,3,100,100);
-        var stackPane = new StackPane();
-        stackPane.getChildren().add(pieceBoard);
-        stackPane.setAlignment(Pos.CENTER_RIGHT);
-        challengePane.getChildren().add(stackPane);
+        pieceBoard = new GameBoard(3,3,100,100);
+        pieceBoard.setAlignment(Pos.CENTER);
+
+        followingPieceBoard = new GameBoard(3,3,75,75);
+        followingPieceBoard.setAlignment(Pos.CENTER);
+        pieceBoard.setTranslateY(-10);
+        pieceBoard.setTranslateX(12.5);
+
+        var pieces = new VBox(pieceBoard, followingPieceBoard);
+        pieces.setAlignment(Pos.CENTER_RIGHT);
+        pieces.setTranslateX(-75);
 
         var mainPane = new BorderPane();
         challengePane.getChildren().add(mainPane);
 
-        var board = new GameBoard(game.getGrid(),gameWindow.getWidth()/2,gameWindow.getWidth()/2);
+        mainPane.setRight(pieces);
+
+        board = new GameBoard(game.getGrid(),gameWindow.getWidth()/2,gameWindow.getWidth()/2);
         mainPane.setCenter(board);
 
         //Handle block on gameboard grid being clicked
         board.setOnBlockClick(this::blockClicked);
+
+        //Setting Piece Listener
+        game.setNextPieceListener(this::nextPiece);
+
+        //Setting Right Clicked Listener
+        board.setOnRightClicked(this::rotate);
+
+        pieceBoard.setOnBlockClick(this::rotate);
+
+        followingPieceBoard.setOnBlockClick(this::swapPieces);
+
+        scene.setOnKeyPressed(this::keyboardInput);
     }
 
     /**
@@ -90,7 +119,12 @@ public class ChallengeScene extends BaseScene {
      * @param gameBlock the Game Block that was clocked
      */
     private void blockClicked(GameBlock gameBlock) {
-        game.blockClicked(gameBlock);
+        Boolean piecePlayed = game.blockClicked(gameBlock);
+        if(piecePlayed) {
+            multimedia.playSound("place.wav");
+        } else {
+            multimedia.playSound("fail.wav");
+        }
     }
 
     /**
@@ -111,21 +145,81 @@ public class ChallengeScene extends BaseScene {
         logger.info("Initialising Challenge");
         game.start();
         this.multimedia.playBackgroundMusic("game.wav");
-        //Escape Key Event
-        scene.setOnKeyPressed(keyEvent -> {
-            if(keyEvent.getCode() == KeyCode.ESCAPE) {
-                multimedia.stopBackground();
-                gameWindow.startMenu();
-                logger.info("Escape Pressed");
-            }
-        });
-
-        //Setting Piece Listener
-        game.setNextPieceListener(this::nextPiece);
+        scene.setOnKeyPressed(this::keyboardInput);
+        blockX = 0;
+        blockY = 0;
     }
 
-    protected void nextPiece(GamePiece gamePiece) {
+    protected void nextPiece(GamePiece gamePiece, GamePiece followingGamePiece) {
         pieceBoard.pieceToDisplay(gamePiece);
+        followingPieceBoard.pieceToDisplay(followingGamePiece);
     }
 
+    protected void rotate(GameBlock gameBlock) {
+        rotate(1);
+    }
+
+    protected void rotateLeft() {
+        rotate(3);
+    }
+
+    protected void rotate(int rotations) {
+        for(int x = 0; x< rotations; x++) {
+            game.rotateCurrentPiece();
+        }
+        pieceBoard.pieceToDisplay(game.getCurrentPiece());
+        multimedia.playSound("rotate.wav");
+    }
+
+    protected void swapPieces(GameBlock gameBlock) {
+        swapPieces();
+    }
+
+    protected void swapPieces() {
+        game.swapCurrentPiece();
+        pieceBoard.pieceToDisplay(game.getCurrentPiece());
+        followingPieceBoard.pieceToDisplay(game.getFollowingPiece());
+        multimedia.playSound("rotate.wav");
+    }
+
+    protected void keyboardInput(KeyEvent keyEvent) {
+        if(keyEvent.getCode() == KeyCode.ESCAPE) {
+            multimedia.stopBackground();
+            gameWindow.startMenu();
+            logger.info("Escape Pressed");
+        } else if(keyEvent.getCode() == KeyCode.Q || keyEvent.getCode() == KeyCode.Z || keyEvent.getCode() == KeyCode.OPEN_BRACKET) {
+            rotateLeft();
+        } else if (keyEvent.getCode() == KeyCode.E || keyEvent.getCode() == KeyCode.C || keyEvent.getCode() == KeyCode.CLOSE_BRACKET ) {
+            rotate(1);
+        } else if(keyEvent.getCode() == KeyCode.SPACE || keyEvent.getCode() == KeyCode.R) {
+            swapPieces();
+        } else if(keyEvent.getCode() == KeyCode.ENTER || keyEvent.getCode() == KeyCode.X) {
+            blockClicked(board.getBlock(blockX, blockY));
+        } else if(keyEvent.getCode() == KeyCode.W || keyEvent.getCode() == KeyCode.UP) {
+            if(blockY>0) {
+                blockY-=1;
+            } else {
+                multimedia.playSound("fail.wav");
+            }
+        } else if(keyEvent.getCode() == KeyCode.D || keyEvent.getCode() == KeyCode.RIGHT) {
+            if(blockX<5) {
+                blockX+=1;
+            } else {
+                multimedia.playSound("fail.wav");
+            }
+        } else if(keyEvent.getCode() == KeyCode.S || keyEvent.getCode() == KeyCode.DOWN) {
+            if(blockY<5) {
+                blockY+=1;
+            } else {
+            multimedia.playSound("fail.wav");
+            }
+        } else if(keyEvent.getCode() == KeyCode.A|| keyEvent.getCode() == KeyCode.LEFT) {
+            if(blockX>0) {
+                blockX-=1;
+            } else {
+                multimedia.playSound("fail.wav");
+            }
+        }
+
+    }
 }

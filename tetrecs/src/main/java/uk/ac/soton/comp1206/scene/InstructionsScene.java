@@ -8,8 +8,7 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.ac.soton.comp1206.Multimedia;
-import uk.ac.soton.comp1206.component.PieceBoard;
+import uk.ac.soton.comp1206.component.GameBoard;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
@@ -83,13 +82,13 @@ public class InstructionsScene extends BaseScene{
         GridPane gridPane = new GridPane();
         gridPane.setPrefSize(100, gameWindow.getWidth());
         for(int x=0; x<15; x++) {
-            PieceBoard pieceBoard = new PieceBoard(3,3,50,50);
+            GameBoard gameBoard = new GameBoard(3,3,50,50);
             GamePiece gamePiece = GamePiece.createPiece(x);
-            pieceBoard.pieceToDisplay(gamePiece);
+            gameBoard.pieceToDisplay(gamePiece);
             if(x < 8) {
-                gridPane.add(pieceBoard, x, 0);
+                gridPane.add(gameBoard, x, 0);
             } else {
-                gridPane.add(pieceBoard, x - 8, 1);
+                gridPane.add(gameBoard, x - 8, 1);
             }
         }
         mainPane.getChildren().add(gridPane);

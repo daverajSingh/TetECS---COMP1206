@@ -115,7 +115,7 @@ public class Grid {
                 int value = gamePieceBlocks[x][y];
                 if (value == 0) continue;
                 int grid = get(x + placeX, y + placeY);
-                if(grid > 0) {
+                if(grid != 0) {
                     return false;
                 }
             }

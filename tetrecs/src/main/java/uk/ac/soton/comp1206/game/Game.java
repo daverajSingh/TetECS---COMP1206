@@ -35,13 +35,12 @@ public class Game {
     protected final Grid grid;
 
     protected GamePiece currentPiece;
+    protected GamePiece followingPiece;
 
     protected IntegerProperty score = new SimpleIntegerProperty(0);
     protected IntegerProperty level = new SimpleIntegerProperty(0);
     protected IntegerProperty lives = new SimpleIntegerProperty(3);
     protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
-
-    private Multimedia multimedia = new Multimedia();
 
     protected NextPieceListener nextPieceListener;
 
@@ -87,14 +86,15 @@ public class Game {
      */
     public void initialiseGame() {
         logger.info("Initialising game");
-        currentPiece = spawnPiece();
+        followingPiece = spawnPiece();
+        nextPiece();
     }
 
     /**
      * Handle what should happen when a particular block is clicked
      * @param gameBlock the block that was clicked
      */
-    public void blockClicked(GameBlock gameBlock) {
+    public boolean blockClicked(GameBlock gameBlock) {
         //Get the position of this block
         int x = gameBlock.getX();
         int y = gameBlock.getY();
@@ -102,6 +102,9 @@ public class Game {
             grid.playPiece(currentPiece, x, y);
             nextPiece();
             afterPiece();
+            return true;
+        } else {
+            return false;
         }
     }
     public void afterPiece() {
@@ -194,12 +197,31 @@ public class Game {
     }
 
     public void nextPiece() {
-        currentPiece = spawnPiece();
-        nextPieceListener.nextPiece(currentPiece);
+        currentPiece = followingPiece;
+        followingPiece = spawnPiece();
+        nextPieceListener.nextPiece(currentPiece, followingPiece);
     }
 
     public void setNextPieceListener(NextPieceListener nextPieceListener) {
         this.nextPieceListener = nextPieceListener;
+    }
+
+    public void rotateCurrentPiece() {
+        currentPiece.rotate();
+    };
+
+    public void swapCurrentPiece() {
+        GamePiece temp = followingPiece;
+        followingPiece = currentPiece;
+        currentPiece = temp;
+    }
+
+    public GamePiece getCurrentPiece() {
+        return currentPiece;
+    }
+
+    public GamePiece getFollowingPiece() {
+        return followingPiece;
     }
 
 }
