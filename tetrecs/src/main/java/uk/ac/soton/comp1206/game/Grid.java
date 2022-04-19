@@ -1,7 +1,5 @@
 package uk.ac.soton.comp1206.game;
 
-import java.io.Console;
-
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 

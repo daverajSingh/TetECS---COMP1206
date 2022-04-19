@@ -1,4 +1,4 @@
-package uk.ac.soton.comp1206;
+package uk.ac.soton.comp1206.media;
 
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
@@ -39,7 +39,7 @@ public class Multimedia {
             Media play = new Media(soundToPlay);
             mediaPlayer = new MediaPlayer(play);
             mediaPlayer.play();
-            logger.info("Playing Media Sound" + sound);
+            logger.info("Playing Media Sound: " + sound);
 
         } catch(Exception e) {
             e.printStackTrace();

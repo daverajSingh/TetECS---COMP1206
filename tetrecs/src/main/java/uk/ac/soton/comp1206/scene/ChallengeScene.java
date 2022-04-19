@@ -7,13 +7,16 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.ac.soton.comp1206.Multimedia;
+import uk.ac.soton.comp1206.media.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
+import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 import uk.ac.soton.comp1206.component.GameBoard;
 import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
+
+import java.util.Set;
 
 /**
  * The Single Player challenge scene. Holds the UI for the single player challenge mode in the game.
@@ -63,18 +66,35 @@ public class ChallengeScene extends BaseScene {
         challengePane.getStyleClass().add("menu-background");
         root.getChildren().add(challengePane);
 
-        var score = new Text("Score: " + game.scoreProperty().asString().getValue());
-        var level = new Text("Level: " + game.levelProperty().asString().getValue());
-        var multiplier = new Text("Multiplier: " + game.multiplierProperty().asString().getValue());
-        var lives = new Text("Lives: " + game.livesProperty().asString().getValue());
-
+        var score = new Text("Score: ");
+        var scoreValue = new Text("0");
+        scoreValue.textProperty().bind(game.scoreProperty().asString());
+        var scoreBox = new HBox(score, scoreValue);
         score.getStyleClass().add("heading");
+        scoreValue.getStyleClass().add("heading");
+
+        var level = new Text("Level: ");
+        var levelValue = new Text("1");
+        levelValue.textProperty().bind(game.levelProperty().asString());
+        var levelBox = new HBox(level, levelValue);
         level.getStyleClass().add("heading");
+        levelValue.getStyleClass().add("heading");
+
+        var multiplier = new Text("Multiplier: ");
+        var multiplierValue = new Text("1");
+        multiplierValue.textProperty().bind(game.multiplierProperty().asString());
+        var multiplierBox = new HBox(multiplier, multiplierValue);
         multiplier.getStyleClass().add("heading");
+        multiplierValue.getStyleClass().add("heading");
+
+        var lives = new Text("Lives: ");
+        var livesValue = new Text("3");
+        livesValue.textProperty().bind(game.livesProperty().asString());
+        var livesBox = new HBox(lives, livesValue);
         lives.getStyleClass().add("heading");
+        livesValue.getStyleClass().add("heading");
 
-        HBox stats = new HBox(20, score, level, multiplier, lives);
-
+        HBox stats = new HBox(20, scoreBox, levelBox, multiplierBox, livesBox);
         challengePane.getChildren().add(stats);
         stats.setAlignment(Pos.TOP_CENTER);
 
@@ -85,6 +105,7 @@ public class ChallengeScene extends BaseScene {
         followingPieceBoard.setAlignment(Pos.CENTER);
         pieceBoard.setTranslateY(-10);
         pieceBoard.setTranslateX(12.5);
+        pieceBoard.paintCentre();
 
         var pieces = new VBox(pieceBoard, followingPieceBoard);
         pieces.setAlignment(Pos.CENTER_RIGHT);
@@ -104,6 +125,8 @@ public class ChallengeScene extends BaseScene {
         //Setting Piece Listener
         game.setNextPieceListener(this::nextPiece);
 
+        game.setLineClearedListener(this::lineClear);
+
         //Setting Right Clicked Listener
         board.setOnRightClicked(this::rotate);
 
@@ -122,6 +145,7 @@ public class ChallengeScene extends BaseScene {
         Boolean piecePlayed = game.blockClicked(gameBlock);
         if(piecePlayed) {
             multimedia.playSound("place.wav");
+            board.getBlock(blockX, blockY).paintCursor();
         } else {
             multimedia.playSound("fail.wav");
         }
@@ -148,6 +172,7 @@ public class ChallengeScene extends BaseScene {
         scene.setOnKeyPressed(this::keyboardInput);
         blockX = 0;
         blockY = 0;
+        board.getBlock(blockX, blockY).paintCursor();
     }
 
     protected void nextPiece(GamePiece gamePiece, GamePiece followingGamePiece) {
@@ -183,6 +208,9 @@ public class ChallengeScene extends BaseScene {
     }
 
     protected void keyboardInput(KeyEvent keyEvent) {
+        int oldBlockX = blockX;
+        int oldBlockY = blockY;
+        Boolean moved = false;
         if(keyEvent.getCode() == KeyCode.ESCAPE) {
             multimedia.stopBackground();
             gameWindow.startMenu();
@@ -198,28 +226,40 @@ public class ChallengeScene extends BaseScene {
         } else if(keyEvent.getCode() == KeyCode.W || keyEvent.getCode() == KeyCode.UP) {
             if(blockY>0) {
                 blockY-=1;
+                moved = true;
             } else {
                 multimedia.playSound("fail.wav");
             }
         } else if(keyEvent.getCode() == KeyCode.D || keyEvent.getCode() == KeyCode.RIGHT) {
-            if(blockX<5) {
+            if(blockX<4) {
                 blockX+=1;
+                moved = true;
             } else {
                 multimedia.playSound("fail.wav");
             }
         } else if(keyEvent.getCode() == KeyCode.S || keyEvent.getCode() == KeyCode.DOWN) {
-            if(blockY<5) {
+            if(blockY<4) {
                 blockY+=1;
+                moved = true;
             } else {
             multimedia.playSound("fail.wav");
             }
         } else if(keyEvent.getCode() == KeyCode.A|| keyEvent.getCode() == KeyCode.LEFT) {
             if(blockX>0) {
                 blockX-=1;
+                moved = true;
             } else {
                 multimedia.playSound("fail.wav");
             }
         }
+        if(moved) {
+            board.getBlock(oldBlockX, oldBlockY).resetCursor();
+            board.getBlock(blockX, blockY).paintCursor();
+        }
+    }
 
+    public void lineClear(Set<GameBlockCoordinate> gameBlockCoordinates) {
+        multimedia.playSound("clear.wav");
+        board.fadeOut(gameBlockCoordinates);
     }
 }

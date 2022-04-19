@@ -10,6 +10,8 @@ import uk.ac.soton.comp1206.event.RightClickedListener;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.game.Grid;
 
+import java.util.Set;
+
 /**
  * A GameBoard is a visual component to represent the visual GameBoard.
  * It extends a GridPane to hold a grid of GameBlocks.
@@ -200,6 +202,14 @@ public class GameBoard extends GridPane {
         this.grid.playPiece(gamePiece, 1,1);
     }
 
+    public void paintCentre() {
+        this.getBlock(1,1).centre();
+    }
 
+    public void fadeOut(Set<GameBlockCoordinate> gameBlockCoordinates) {
+        for (GameBlockCoordinate gameBlockCoordinate: gameBlockCoordinates){
+            blocks[gameBlockCoordinate.getX()][gameBlockCoordinate.getY()].fadeOut();
+        }
+    }
 
 }

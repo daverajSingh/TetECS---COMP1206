@@ -4,8 +4,9 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
+import uk.ac.soton.comp1206.component.GameBlockCoordinate;
+import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
 
 import java.util.HashSet;
@@ -43,6 +44,7 @@ public class Game {
     protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
 
     protected NextPieceListener nextPieceListener;
+    protected LineClearedListener lineClearedListener;
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -109,7 +111,7 @@ public class Game {
     }
     public void afterPiece() {
         int lines = 0;
-        HashSet<int[]> blocksToBeCleared = new HashSet<>();
+        HashSet<GameBlockCoordinate> blocksToBeCleared = new HashSet<>();
 
         for(int x=0; x < cols; x++) { //Vertical
             int countX = 0;
@@ -120,7 +122,7 @@ public class Game {
             if(countX == rows) {
                 lines+=1;
                 for(int y=0; y < rows; y++) {
-                    int[] coordinate = new int[]{x,y};
+                    GameBlockCoordinate coordinate = new GameBlockCoordinate(x,y);
                     blocksToBeCleared.add(coordinate);
                 }
             }
@@ -135,7 +137,7 @@ public class Game {
             if(countY == cols) {
                 lines+=1;
                 for(int x=0; x < cols; x++) {
-                    int[] coordinate = new int[]{x,y};
+                    GameBlockCoordinate coordinate = new GameBlockCoordinate(x,y);
                     blocksToBeCleared.add(coordinate);
                 }
             }
@@ -144,21 +146,26 @@ public class Game {
         if(lines>0){
             clear(blocksToBeCleared);
             score(lines, blocksToBeCleared.size());
-            this.multiplier.add(1);
+            this.multiplier.set(this.multiplier.add(1).get());
+            if(lineClearedListener != null) {
+                lineClearedListener.lineClear(blocksToBeCleared);
+                logger.info("Clear Lines");
+            }
         } else {
             this.multiplier.set(1);
         }
     }
 
-    public void clear(HashSet<int[]> blocks) {
-        for (int[] block: blocks) {
-            grid.set(block[0], block[1], 0);
+    public void clear(HashSet<GameBlockCoordinate> blocks) {
+        for (GameBlockCoordinate block: blocks) {
+            grid.set(block.getX(), block.getY(), 0);
         }
     }
 
     public void score(int lines, int blocks){
         int scoreToAdd = lines*blocks*10*this.multiplier.get();
-        this.score.add(scoreToAdd);
+        this.score.set(this.score.add(scoreToAdd).get());
+        logger.info("Score added, Score: " + this.scoreProperty().get());
         int level = this.score.get() / 1000;
         if(this.level.get() != level) {
             this.level.set(level);
@@ -205,6 +212,11 @@ public class Game {
     public void setNextPieceListener(NextPieceListener nextPieceListener) {
         this.nextPieceListener = nextPieceListener;
     }
+
+    public void setLineClearedListener(LineClearedListener lineClearedListener) {
+        this.lineClearedListener = lineClearedListener;
+    }
+
 
     public void rotateCurrentPiece() {
         currentPiece.rotate();

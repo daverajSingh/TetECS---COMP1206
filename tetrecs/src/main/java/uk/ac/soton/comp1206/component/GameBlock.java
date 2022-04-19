@@ -1,9 +1,11 @@
 package uk.ac.soton.comp1206.component;
 
+import javafx.animation.AnimationTimer;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.paint.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,6 +22,8 @@ import org.apache.logging.log4j.Logger;
 public class GameBlock extends Canvas {
 
     private static final Logger logger = LogManager.getLogger(GameBlock.class);
+
+    private AnimationTimer animationTimer;
 
     /**
      * The set of colours for different pieces
@@ -62,6 +66,8 @@ public class GameBlock extends Canvas {
      * The value of this block (0 = empty, otherwise specifies the colour to render as)
      */
     private final IntegerProperty value = new SimpleIntegerProperty(0);
+
+    private Boolean centre = false;
 
     /**
      * Create a new single Game Block
@@ -110,6 +116,12 @@ public class GameBlock extends Canvas {
             //If the block is not empty, paint with the colour represented by the value
             paintColor(COLOURS[value.get()]);
         }
+        if(centre) {
+            //paints centre dot
+            var gc = getGraphicsContext2D();
+            gc.setStroke(Color.GREY);
+            gc.fillOval(width/4, height/4, width/2, height/2);
+        }
     }
 
     /**
@@ -122,11 +134,11 @@ public class GameBlock extends Canvas {
         gc.clearRect(0,0,width,height);
 
         //Fill
-        gc.setFill(Color.WHITE);
+        gc.setFill(Color.web("BLACK", 0.5));
         gc.fillRect(0,0, width, height);
 
         //Border
-        gc.setStroke(Color.BLACK);
+        gc.setStroke(Color.GREY);
         gc.strokeRect(0,0,width,height);
     }
 
@@ -143,6 +155,10 @@ public class GameBlock extends Canvas {
         //Colour fill
         gc.setFill(colour);
         gc.fillRect(0,0, width, height);
+
+        //Triangle Fill
+        gc.setFill(Color.color(1,1, 1, 0.35));
+        gc.fillPolygon(new double[]{0.0, 0.0, width}, new double[]{0, height, height}, 3);
 
         //Border
         gc.setStroke(Color.BLACK);
@@ -181,4 +197,52 @@ public class GameBlock extends Canvas {
         value.bind(input);
     }
 
+    public void paintCursor() {
+        var gc = getGraphicsContext2D();
+        //Border
+        gc.setStroke(Color.WHITE);
+        gc.strokeRect(0,0,width,height);
+        if(value.get() == 0) {
+            gc.setFill(Color.WHITE.deriveColor(0,0,1,0.7));
+            gc.fillRect(0,0, width, height);
+        }
+    }
+
+    public void resetCursor() {
+        var gc = getGraphicsContext2D();
+        //Resets Border
+        gc.setStroke(Color.BLACK);
+        gc.strokeRect(0,0,width,height);
+        if(value.get() == 0) {
+            paintEmpty();
+        }
+    }
+
+    public void centre() {
+        centre = true;
+    }
+
+    public void fadeOut() {
+        animationTimer = new myAnimationTimer();
+        animationTimer.start();
+    }
+
+    private class myAnimationTimer extends AnimationTimer {
+        double opacityFadeOut = 1;
+
+        @Override
+        public void handle(long l) {
+            {
+                paintEmpty();
+                var gc = getGraphicsContext2D();
+                opacityFadeOut -= 0.05;
+                if (opacityFadeOut <= 0.0) {
+                    stop();
+                    animationTimer = null;
+                    logger.info("Animation Stopped");
+                }
+                gc.setFill(Color.WHITE.deriveColor(0,0,1,opacityFadeOut));
+                gc.fillRect(0,0,width,height);            }
+        }
+    }
 }
