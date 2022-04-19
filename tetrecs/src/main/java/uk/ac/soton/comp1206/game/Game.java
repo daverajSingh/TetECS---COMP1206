@@ -6,9 +6,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
+import uk.ac.soton.comp1206.event.GameLoopListener;
 import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
 
+import javax.swing.*;
+import java.awt.event.ActionListener;
 import java.util.HashSet;
 import java.util.Random;
 
@@ -45,6 +48,10 @@ public class Game {
 
     protected NextPieceListener nextPieceListener;
     protected LineClearedListener lineClearedListener;
+    protected GameLoopListener gameLoopListener;
+
+    protected int initialDelay = 12000;
+    protected Timer timer;
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -81,6 +88,7 @@ public class Game {
     public void start() {
         logger.info("Starting game");
         initialiseGame();
+        timer.setInitialDelay(getTimerDelay());
     }
 
     /**
@@ -217,6 +225,9 @@ public class Game {
         this.lineClearedListener = lineClearedListener;
     }
 
+    public void setOnGameLoop(GameLoopListener gameLoopListener) {
+        this.gameLoopListener = gameLoopListener;
+    }
 
     public void rotateCurrentPiece() {
         currentPiece.rotate();
@@ -234,6 +245,20 @@ public class Game {
 
     public GamePiece getFollowingPiece() {
         return followingPiece;
+    }
+
+    public int getTimerDelay() {
+        int delay = initialDelay - (500 * level.get());
+        return Math.max(delay, 2500);
+    }
+
+    public void gameLoop() {
+        currentPiece = null;
+        nextPiece();
+        lives.set(lives.get() - 1);
+        multiplier.set(multiplier.get() - 1);
+        timer.setDelay(getTimerDelay());
+        timer.start();
     }
 
 }
