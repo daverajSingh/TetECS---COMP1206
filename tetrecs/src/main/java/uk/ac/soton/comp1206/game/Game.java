@@ -10,10 +10,8 @@ import uk.ac.soton.comp1206.event.GameLoopListener;
 import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
 
-import javax.swing.*;
-import java.awt.event.ActionListener;
-import java.util.HashSet;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.*;
 
 /**
  * The Game class handles the main logic, state and properties of the TetrECS game. Methods to manipulate the game state
@@ -50,8 +48,9 @@ public class Game {
     protected LineClearedListener lineClearedListener;
     protected GameLoopListener gameLoopListener;
 
+    protected ScheduledExecutorService timer;
     protected int initialDelay = 12000;
-    protected Timer timer;
+    protected ScheduledFuture<?> newLoop;
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -88,7 +87,7 @@ public class Game {
     public void start() {
         logger.info("Starting game");
         initialiseGame();
-        timer.setInitialDelay(getTimerDelay());
+        startLoop();
     }
 
     /**
@@ -98,6 +97,7 @@ public class Game {
         logger.info("Initialising game");
         followingPiece = spawnPiece();
         nextPiece();
+        timer = Executors.newSingleThreadScheduledExecutor();
     }
 
     /**
@@ -253,12 +253,31 @@ public class Game {
     }
 
     public void gameLoop() {
-        currentPiece = null;
         nextPiece();
+        if(lives.get() == 1) {
+            lives.set(0);
+            endGame();
+        }
         lives.set(lives.get() - 1);
-        multiplier.set(multiplier.get() - 1);
-        timer.setDelay(getTimerDelay());
-        timer.start();
+        multiplier.set(1);
+        if(gameLoopListener != null){
+            gameLoopListener.gameLoop(getTimerDelay());
+        }
+        startLoop();
     }
 
+    public void startLoop() {
+        newLoop = timer.schedule(this::gameLoop, getTimerDelay(), TimeUnit.MILLISECONDS);
+        gameLoopListener.gameLoop(getTimerDelay());
+    }
+
+    public void restartLoop() {
+        newLoop.cancel(false);
+        startLoop();
+    }
+
+    public void endGame() {
+        timer.shutdownNow();
+        logger.info("Game Has Ended");
+    }
 }

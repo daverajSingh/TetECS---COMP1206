@@ -1,10 +1,17 @@
 package uk.ac.soton.comp1206.scene;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.KeyValue;
+import javafx.animation.Timeline;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.media.Multimedia;
@@ -16,6 +23,7 @@ import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
+import java.awt.*;
 import java.util.Set;
 
 /**
@@ -37,6 +45,8 @@ public class ChallengeScene extends BaseScene {
     protected int blockX;
 
     protected int blockY;
+
+    protected Rectangle timer;
 
     /**
      * Create a new Single Player challenge scene
@@ -97,6 +107,7 @@ public class ChallengeScene extends BaseScene {
         HBox stats = new HBox(20, scoreBox, levelBox, multiplierBox, livesBox);
         challengePane.getChildren().add(stats);
         stats.setAlignment(Pos.TOP_CENTER);
+        stats.setTranslateY(20);
 
         pieceBoard = new GameBoard(3,3,100,100);
         pieceBoard.setAlignment(Pos.CENTER);
@@ -111,21 +122,29 @@ public class ChallengeScene extends BaseScene {
         pieces.setAlignment(Pos.CENTER_RIGHT);
         pieces.setTranslateX(-75);
 
+        timer = new Rectangle(gameWindow.getWidth(), 10);
+        var timerPane = new StackPane();
+        timerPane.getChildren().add(timer);
+
         var mainPane = new BorderPane();
         challengePane.getChildren().add(mainPane);
 
         mainPane.setRight(pieces);
+        mainPane.setTop(timerPane);
+        timerPane.setAlignment(Pos.TOP_LEFT);
 
         board = new GameBoard(game.getGrid(),gameWindow.getWidth()/2,gameWindow.getWidth()/2);
         mainPane.setCenter(board);
 
-        //Handle block on gameboard grid being clicked
+        //Handle block on Gameboard grid being clicked
         board.setOnBlockClick(this::blockClicked);
 
         //Setting Piece Listener
         game.setNextPieceListener(this::nextPiece);
 
         game.setLineClearedListener(this::lineClear);
+
+        game.setOnGameLoop(this::gameLoop);
 
         //Setting Right Clicked Listener
         board.setOnRightClicked(this::rotate);
@@ -142,17 +161,18 @@ public class ChallengeScene extends BaseScene {
      * @param gameBlock the Game Block that was clocked
      */
     private void blockClicked(GameBlock gameBlock) {
-        Boolean piecePlayed = game.blockClicked(gameBlock);
+        boolean piecePlayed = game.blockClicked(gameBlock);
         if(piecePlayed) {
             multimedia.playSound("place.wav");
             board.getBlock(blockX, blockY).paintCursor();
+            game.restartLoop();
         } else {
             multimedia.playSound("fail.wav");
         }
     }
 
     /**
-     * Setup the game object and model
+     * Set up the game object and model
      */
     public void setupGame() {
         logger.info("Starting a new challenge");
@@ -210,7 +230,7 @@ public class ChallengeScene extends BaseScene {
     protected void keyboardInput(KeyEvent keyEvent) {
         int oldBlockX = blockX;
         int oldBlockY = blockY;
-        Boolean moved = false;
+        boolean moved = false;
         if(keyEvent.getCode() == KeyCode.ESCAPE) {
             multimedia.stopBackground();
             gameWindow.startMenu();
@@ -258,8 +278,29 @@ public class ChallengeScene extends BaseScene {
         }
     }
 
-    public void lineClear(Set<GameBlockCoordinate> gameBlockCoordinates) {
+    protected void lineClear(Set<GameBlockCoordinate> gameBlockCoordinates) {
         multimedia.playSound("clear.wav");
         board.fadeOut(gameBlockCoordinates);
+    }
+
+    protected void gameLoop(int delay) {
+        timer.widthProperty().set(gameWindow.getWidth());
+        Timeline timerBar = createTimeLine(delay);
+        timerBar.play();
+    }
+
+    private Timeline createTimeLine(int delay) {
+        Timeline timeline = new Timeline(new KeyFrame(Duration.ZERO, new KeyValue(timer.fillProperty(), Color.GREEN)));
+        timeline.getKeyFrames().add(new KeyFrame(Duration.ZERO, new KeyValue(timer.widthProperty(), timer.getWidth())));
+
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(delay*0.5), new KeyValue(timer.fillProperty(), Color.YELLOW)));
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(delay*0.5), new KeyValue(timer.widthProperty(), timer.getWidth()*0.75)));
+
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(delay*0.75), new KeyValue(timer.fillProperty(), Color.RED)));
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(delay*0.75), new KeyValue(timer.widthProperty(), timer.getWidth()*0.5)));
+
+        timeline.getKeyFrames().add(new KeyFrame(Duration.millis(delay), new KeyValue(timer.widthProperty(), 0)));
+
+        return timeline;
     }
 }
