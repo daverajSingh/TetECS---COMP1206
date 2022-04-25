@@ -1,7 +1,6 @@
 package uk.ac.soton.comp1206.component;
 
 import javafx.animation.FadeTransition;
-import javafx.animation.Interpolator;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.value.ObservableValue;

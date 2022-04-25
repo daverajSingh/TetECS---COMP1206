@@ -44,7 +44,7 @@ public class Game {
 
     protected IntegerProperty score = new SimpleIntegerProperty(0);
     protected IntegerProperty level = new SimpleIntegerProperty(0);
-    protected IntegerProperty lives = new SimpleIntegerProperty(0);
+    protected IntegerProperty lives = new SimpleIntegerProperty(3);
     protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
 
     protected NextPieceListener nextPieceListener;

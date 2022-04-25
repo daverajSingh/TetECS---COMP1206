@@ -142,7 +142,7 @@ public class MenuScene extends BaseScene {
     }
 
     private void startMultiplayer(ActionEvent event) {
-
+        gameWindow.startLobby();
     }
 
     private void startInstructions(ActionEvent event) {

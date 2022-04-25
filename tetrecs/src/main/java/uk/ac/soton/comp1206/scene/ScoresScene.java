@@ -48,8 +48,6 @@ public class ScoresScene extends BaseScene {
 
     protected Communicator communicator;
 
-    protected CommunicationsListener communicationsListener;
-
 
     /**
      * Create a new scene, passing in the GameWindow the scene will be displayed in
@@ -159,7 +157,6 @@ public class ScoresScene extends BaseScene {
             }
         });
         exit.setStyle("-fx-text-fill: white");
-
     }
 
 
