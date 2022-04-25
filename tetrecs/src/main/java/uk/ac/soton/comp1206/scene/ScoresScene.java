@@ -1,11 +1,15 @@
 package uk.ac.soton.comp1206.scene;
 
+import javafx.application.Platform;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -14,8 +18,10 @@ import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.ScoresList;
+import uk.ac.soton.comp1206.event.CommunicationsListener;
 import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.media.Multimedia;
+import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
@@ -38,6 +44,13 @@ public class ScoresScene extends BaseScene {
 
     protected SimpleListProperty<Pair<String, Integer>> localScoreList = new SimpleListProperty<>();
 
+    protected SimpleListProperty<Pair<String, Integer>> remoteScoresList = new SimpleListProperty<>();
+
+    protected Communicator communicator;
+
+    protected CommunicationsListener communicationsListener;
+
+
     /**
      * Create a new scene, passing in the GameWindow the scene will be displayed in
      *
@@ -48,7 +61,9 @@ public class ScoresScene extends BaseScene {
         gameState = game;
         score = game.scoreProperty().get();
         this.localScoreList.set(FXCollections.observableArrayList(new ArrayList<Pair<String, Integer>>()));
+        this.remoteScoresList.set(FXCollections.observableArrayList(new ArrayList<Pair<String, Integer>>()));
         logger.info("Creating Scores Scene");
+        communicator = gameWindow.getCommunicator();
     }
 
     @Override
@@ -63,6 +78,8 @@ public class ScoresScene extends BaseScene {
                 logger.info("Escape Pressed");
             }
         });
+        loadOnlineScores();
+        communicator.addListener(message -> Platform.runLater(() -> receiveCommunication(message.trim())));
     }
 
     @Override
@@ -80,30 +97,71 @@ public class ScoresScene extends BaseScene {
         var mainPane = new BorderPane();
         scorePane.getChildren().add(mainPane);
 
-        var scores = new VBox();
+        var scores = new HBox();
         scores.setAlignment(Pos.CENTER);
         scorePane.getChildren().add(scores);
 
+        var localScores = new VBox();
+        localScores.setAlignment(Pos.CENTER);
+        scores.getChildren().add(localScores);
+
+        var onlineScores = new VBox();
+        onlineScores.setAlignment(Pos.CENTER);
+        scores.getChildren().add(onlineScores);
+
         Text highScores = new Text("Game Over - High Scores");
-        mainPane.setTop(highScores);
         highScores.setTextAlignment(TextAlignment.CENTER);
-        highScores.setLayoutX((gameWindow.getWidth() - highScores.layoutBoundsProperty().get().getWidth())/2);
         highScores.getStyleClass().add("title");
+        scorePane.getChildren().add(highScores);
+        StackPane.setAlignment(highScores, Pos.TOP_CENTER);
+
+        var scoreText = new Text("Local Scores");
+        scoreText.getStyleClass().add("heading");
+        localScores.getChildren().add(scoreText);
+        scoreText.setTranslateX(300);
 
         var scoresList = new ScoresList();
-        scores.getChildren().add(scoresList);
+        localScores.getChildren().add(scoresList);
         scoresList.setAlignment(Pos.CENTER);
+        scoresList.setTranslateX(300);
         this.localScoreList.bind(scoresList.listProperty());
+
+        var onlineScoreText = new Text("Online Scores");
+        onlineScoreText.getStyleClass().add("heading");
+        onlineScores.getChildren().add(onlineScoreText);
+        onlineScoreText.setTranslateX(-300);
+
+        var onlineScoresList = new ScoresList();
+        onlineScores.getChildren().add(onlineScoresList);
+        onlineScoresList.setAlignment(Pos.CENTER);
+        onlineScoresList.setTranslateX(-300);
+        this.remoteScoresList.bind(onlineScoresList.listProperty());
 
         var nameDialog = new TextInputDialog();
         nameDialog.setTitle("Score Input");
         nameDialog.setContentText("Enter Name To Add to Leaderboard");
         Optional<String> result = nameDialog.showAndWait();
-        this.name = "Anon";
-        if(result.isPresent()){
-            this.name = result.get();
-        }
+        this.name = result.orElse("Anon");
+
+        var exit = new Button("Exit To Main Menu");
+        exit.setBackground(null);
+        scorePane.getChildren().add(exit);
+        exit.setOnAction(this::startMenu);
+        exit.setAlignment(Pos.CENTER);
+        exit.setTranslateY(200);
+        exit.getStyleClass().add("menuItem");
+
+        exit.hoverProperty().addListener((ov, oldValue, newValue) -> {
+            if (newValue) {
+                exit.setStyle("-fx-text-fill: yellow");
+            } else {
+                exit.setStyle("-fx-text-fill: white");
+            }
+        });
+        exit.setStyle("-fx-text-fill: white");
+
     }
+
 
     protected void loadScores() {
         File file = new File("scores.txt");
@@ -175,5 +233,34 @@ public class ScoresScene extends BaseScene {
             e.printStackTrace();
             logger.error("Unable to add score to text file");
         }
+    }
+
+    protected void loadOnlineScores() {
+        communicator.send("HISCORES");
+    }
+
+    protected void writeOnlineScore() {
+        communicator.send("HISCORE " + this.name + ":" + this.score);
+    }
+
+    protected void receiveCommunication(String message) {
+        if(message.contains("NEWSCORE")) {
+            logger.info("Server received highscore");
+        } else {
+            message = message.replace("HISCORES", "");
+            String[] pairs = message.split("\n");
+            for (String pair : pairs) {
+                String[] scoreName = pair.split(":");
+                remoteScoresList.add(new Pair<>(scoreName[0], Integer.parseInt(scoreName[1])));
+            }
+            if(remoteScoresList.get(8).getValue() < this.score) {
+                writeOnlineScore();
+            }
+        }
+    }
+
+    protected void startMenu(ActionEvent event) {
+        gameWindow.startMenu();
+        multimedia.stopBackground();
     }
 }
