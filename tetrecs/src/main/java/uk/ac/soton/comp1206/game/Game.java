@@ -1,11 +1,14 @@
 package uk.ac.soton.comp1206.game;
 
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
+import uk.ac.soton.comp1206.event.GameEndListener;
 import uk.ac.soton.comp1206.event.GameLoopListener;
 import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
@@ -41,16 +44,19 @@ public class Game {
 
     protected IntegerProperty score = new SimpleIntegerProperty(0);
     protected IntegerProperty level = new SimpleIntegerProperty(0);
-    protected IntegerProperty lives = new SimpleIntegerProperty(3);
+    protected IntegerProperty lives = new SimpleIntegerProperty(0);
     protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
 
     protected NextPieceListener nextPieceListener;
     protected LineClearedListener lineClearedListener;
     protected GameLoopListener gameLoopListener;
+    protected GameEndListener gameEndListener;
 
     protected ScheduledExecutorService timer;
     protected int initialDelay = 12000;
     protected ScheduledFuture<?> newLoop;
+
+    protected ArrayList<Pair<String, Integer>> scores = new ArrayList<>();
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -229,6 +235,10 @@ public class Game {
         this.gameLoopListener = gameLoopListener;
     }
 
+    public void setGameEndListener(GameEndListener gameEndListener) {
+        this.gameEndListener = gameEndListener;
+    }
+
     public void rotateCurrentPiece() {
         currentPiece.rotate();
     };
@@ -247,6 +257,10 @@ public class Game {
         return followingPiece;
     }
 
+    public ArrayList<Pair<String, Integer>> getScores() {
+        return scores;
+    }
+
     public int getTimerDelay() {
         int delay = initialDelay - (500 * level.get());
         return Math.max(delay, 2500);
@@ -254,12 +268,12 @@ public class Game {
 
     public void gameLoop() {
         nextPiece();
-        if(lives.get() == 1) {
-            lives.set(0);
-            endGame();
+        if(lives.get() == 0) {
+            gameOver();
+        } else {
+            lives.set(lives.get() - 1);
+            multiplier.set(1);
         }
-        lives.set(lives.get() - 1);
-        multiplier.set(1);
         if(gameLoopListener != null){
             gameLoopListener.gameLoop(getTimerDelay());
         }
@@ -277,7 +291,13 @@ public class Game {
     }
 
     public void endGame() {
-        timer.shutdownNow();
         logger.info("Game Has Ended");
+        timer.shutdownNow();
+    }
+
+    public void gameOver() {
+        if(gameEndListener != null){
+            Platform.runLater(() -> gameEndListener.gameEnd(this));
+        }
     }
 }

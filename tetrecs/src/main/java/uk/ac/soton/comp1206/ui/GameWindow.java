@@ -9,6 +9,8 @@ import javafx.stage.Stage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.App;
+import uk.ac.soton.comp1206.event.GameEndListener;
+import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.scene.*;
 
@@ -87,11 +89,19 @@ public class GameWindow {
     public void startChallenge() {
         loadScene(new ChallengeScene(this));
     }
+
     /**
      * Display the Instructions Scene
      */
     public void startInstructions() {
         loadScene(new InstructionsScene(this));
+    }
+
+    /**
+     * Display the Scores Scene
+     */
+    public void startScores(Game game) {
+        loadScene(new ScoresScene(this, game));
     }
 
 
@@ -170,4 +180,5 @@ public class GameWindow {
     public Communicator getCommunicator() {
         return communicator;
     }
+
 }
