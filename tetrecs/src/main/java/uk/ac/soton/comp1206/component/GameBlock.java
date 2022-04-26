@@ -5,7 +5,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.effect.ColorAdjust;
 import javafx.scene.paint.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -197,6 +196,9 @@ public class GameBlock extends Canvas {
         value.bind(input);
     }
 
+    /**
+     * Paints the given GameBlock white, indicating where the centre of the GamePiece will be placed
+     */
     public void paintCursor() {
         var gc = getGraphicsContext2D();
         //Border
@@ -208,6 +210,9 @@ public class GameBlock extends Canvas {
         }
     }
 
+    /**
+     * Resets the GameBlock paint, removing the cursor
+     */
     public void resetCursor() {
         var gc = getGraphicsContext2D();
         //Resets Border
@@ -218,15 +223,25 @@ public class GameBlock extends Canvas {
         }
     }
 
+    /**
+     * Value assigned to GameBlocks, so that current and following piece preview have the centre circle painted
+     */
     public void centre() {
         centre = true;
     }
 
+    /**
+     * Starts the fade timer for the GameBlock when a user clears a line
+     */
     public void fadeOut() {
         animationTimer = new myAnimationTimer();
         animationTimer.start();
     }
 
+    /**
+     * Animation Timer Class, easier to have within the same GameBlock file.
+     * Contains the actual logic of the animation
+     */
     private class myAnimationTimer extends AnimationTimer {
         double opacityFadeOut = 1;
 

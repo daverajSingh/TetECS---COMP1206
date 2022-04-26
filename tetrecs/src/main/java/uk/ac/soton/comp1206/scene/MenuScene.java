@@ -141,10 +141,19 @@ public class MenuScene extends BaseScene {
         this.multimedia.stopBackground();
     }
 
+    /**
+     * Handle when the Multiplayer button is pressed
+     * @param event
+     */
     private void startMultiplayer(ActionEvent event) {
         gameWindow.startLobby();
+        multimedia.stopBackground();
     }
 
+    /**
+     * Handle when the Instructions button is pressed
+     * @param event
+     */
     private void startInstructions(ActionEvent event) {
         gameWindow.startInstructions();
         multimedia.stopBackground();

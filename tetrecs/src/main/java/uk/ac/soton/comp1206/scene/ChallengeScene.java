@@ -38,22 +38,44 @@ import java.util.Set;
 public class ChallengeScene extends BaseScene {
 
     private static final Logger logger = LogManager.getLogger(ChallengeScene.class);
+
     protected Game game;
 
     protected Multimedia multimedia = new Multimedia();
 
+    /**
+     * The CurrentPiece is displayed in this GameBoard
+     */
     protected GameBoard pieceBoard;
 
+    /**
+     * The FollowingPiece is displayed in this GameBoard
+     */
     protected GameBoard followingPieceBoard;
 
+    /**
+     * The GameBoard for the game
+     */
     protected GameBoard board;
 
-    protected int blockX;
+    /**
+     * The x coordinate of where a block will be placed
+     */
+    protected int blockX = 0;
 
-    protected int blockY;
+    /**
+     * The y coordinate of where a block will be placed
+     */
+    protected int blockY = 0;
 
+    /**
+     * The HighScore value, which is either the largest local score or the current score of the player
+     */
     public SimpleIntegerProperty highScoreValue = new SimpleIntegerProperty(0);
 
+    /**
+     * The timer UI element, displaying how long the user has left to play the current piece
+     */
     protected Rectangle timer;
 
     /**
@@ -84,6 +106,7 @@ public class ChallengeScene extends BaseScene {
         challengePane.getStyleClass().add("challenge-background");
         root.getChildren().add(challengePane);
 
+        //Score UI element
         var score = new Text("Score: ");
         var scoreValue = new Text("0");
         scoreValue.textProperty().bind(game.scoreProperty().asString());
@@ -91,6 +114,7 @@ public class ChallengeScene extends BaseScene {
         score.getStyleClass().add("heading");
         scoreValue.getStyleClass().add("heading");
 
+        //Level UI element
         var level = new Text("Level: ");
         var levelValue = new Text("1");
         levelValue.textProperty().bind(game.levelProperty().asString());
@@ -98,6 +122,7 @@ public class ChallengeScene extends BaseScene {
         level.getStyleClass().add("heading");
         levelValue.getStyleClass().add("heading");
 
+        //Multiplier UI element
         var multiplier = new Text("Multiplier: ");
         var multiplierValue = new Text("1");
         multiplierValue.textProperty().bind(game.multiplierProperty().asString());
@@ -105,6 +130,7 @@ public class ChallengeScene extends BaseScene {
         multiplier.getStyleClass().add("heading");
         multiplierValue.getStyleClass().add("heading");
 
+        //Lives UI element
         var lives = new Text("Lives: ");
         var livesValue = new Text("3");
         livesValue.textProperty().bind(game.livesProperty().asString());
@@ -112,11 +138,13 @@ public class ChallengeScene extends BaseScene {
         lives.getStyleClass().add("heading");
         livesValue.getStyleClass().add("heading");
 
+        //HBox that includes all of the Key stats for the game
         HBox stats = new HBox(20, scoreBox, levelBox, multiplierBox, livesBox);
         challengePane.getChildren().add(stats);
         stats.setAlignment(Pos.TOP_CENTER);
         stats.setTranslateY(20);
 
+        //HighScore UI element
         var highScore = new Text("Highscore: ");
         var highScoreText = new Text();
         highScoreText.textProperty().bind(highScoreValue.asString());
@@ -124,24 +152,29 @@ public class ChallengeScene extends BaseScene {
         highScore.getStyleClass().add("heading");
         highScoreText.getStyleClass().add("heading");
 
+        //Adjusts Alignment for the HighScore element
         challengePane.getChildren().add(highScoreBox);
         highScoreBox.setAlignment(Pos.TOP_CENTER);
         highScoreBox.setTranslateY(100);
         highScoreBox.setTranslateX(285);
 
+        //Current Piece preview
         pieceBoard = new GameBoard(3,3,100,100);
         pieceBoard.setAlignment(Pos.CENTER);
 
+        //Following Piece preview
         followingPieceBoard = new GameBoard(3,3,75,75);
         followingPieceBoard.setAlignment(Pos.CENTER);
         pieceBoard.setTranslateY(-10);
         pieceBoard.setTranslateX(12.5);
         pieceBoard.paintCentre();
 
+        //VBox of Pieces
         var pieces = new VBox(pieceBoard, followingPieceBoard);
         pieces.setAlignment(Pos.CENTER_RIGHT);
         pieces.setTranslateX(-75);
 
+        //UI timer element
         timer = new Rectangle(gameWindow.getWidth(), 10);
         var timerPane = new StackPane();
         timerPane.getChildren().add(timer);
@@ -162,10 +195,13 @@ public class ChallengeScene extends BaseScene {
         //Setting Piece Listener
         game.setNextPieceListener(this::nextPiece);
 
+        //Setting LineClearedListener
         game.setLineClearedListener(this::lineClear);
 
+        //Setting GameLoopListener
         game.setOnGameLoop(this::gameLoop);
 
+        //Setting GameEndListener
         game.setGameEndListener(game -> {
             gameEnd();
             gameWindow.startScores(game);
@@ -174,12 +210,16 @@ public class ChallengeScene extends BaseScene {
         //Setting Right Clicked Listener
         board.setOnRightClicked(this::rotate);
 
+        //Setting BlockClickListener for the currentPiece preview
         pieceBoard.setOnBlockClick(this::rotate);
 
+        //Setting BlockClickListener for the followingPiece preview
         followingPieceBoard.setOnBlockClick(this::swapPieces);
 
+        //Handling keyboard inputs - setting on key pressed listener
         scene.setOnKeyPressed(this::keyboardInput);
 
+        //Adding a listener to the score property so that the highscore element can be changed
         game.scoreProperty().addListener(this::getHighScore);
     }
 
@@ -187,7 +227,7 @@ public class ChallengeScene extends BaseScene {
      * Handle when a block is clicked
      * @param gameBlock the Game Block that was clocked
      */
-    private void blockClicked(GameBlock gameBlock) {
+    protected void blockClicked(GameBlock gameBlock) {
         boolean piecePlayed = game.blockClicked(gameBlock);
         if(piecePlayed) {
             multimedia.playSound("place.wav");
@@ -216,26 +256,39 @@ public class ChallengeScene extends BaseScene {
         logger.info("Initialising Challenge");
         game.start();
         this.multimedia.playBackgroundMusic("game.wav");
-        scene.setOnKeyPressed(this::keyboardInput);
-        blockX = 0;
-        blockY = 0;
         board.getBlock(blockX, blockY).paintCursor();
         initialHighscore();
     }
 
+    /**
+     * changes the "PieceBoards" to display the correct current and following pieces
+     * @param gamePiece
+     * @param followingGamePiece
+     */
     protected void nextPiece(GamePiece gamePiece, GamePiece followingGamePiece) {
         pieceBoard.pieceToDisplay(gamePiece);
         followingPieceBoard.pieceToDisplay(followingGamePiece);
     }
 
+    /**
+     * Rotates the given piece clockwise
+     * @param gameBlock
+     */
     protected void rotate(GameBlock gameBlock) {
         rotate(1);
     }
 
+    /**
+     * Rotates the given piece counter-clockwise (by calling rotate 3 times)
+     */
     protected void rotateLeft() {
         rotate(3);
     }
 
+    /**
+     * Uses the game's rotate method to rotate pieces and update pieceboards
+     * @param rotations
+     */
     protected void rotate(int rotations) {
         for(int x = 0; x< rotations; x++) {
             game.rotateCurrentPiece();
@@ -244,10 +297,17 @@ public class ChallengeScene extends BaseScene {
         multimedia.playSound("rotate.wav");
     }
 
+    /**
+     * Swaps the current and following pieces
+     * @param gameBlock
+     */
     protected void swapPieces(GameBlock gameBlock) {
         swapPieces();
     }
 
+    /**
+     * Swaps the current and following pieces
+     */
     protected void swapPieces() {
         game.swapCurrentPiece();
         pieceBoard.pieceToDisplay(game.getCurrentPiece());
@@ -255,44 +315,48 @@ public class ChallengeScene extends BaseScene {
         multimedia.playSound("rotate.wav");
     }
 
+    /**
+     * Detects keyboard input and does the correct action
+     * @param keyEvent
+     */
     protected void keyboardInput(KeyEvent keyEvent) {
         int oldBlockX = blockX;
         int oldBlockY = blockY;
         boolean moved = false;
-        if(keyEvent.getCode() == KeyCode.ESCAPE) {
+        if(keyEvent.getCode() == KeyCode.ESCAPE) { //Exits fame
             multimedia.stopBackground();
             gameWindow.startMenu();
             logger.info("Escape Pressed");
         } else if(keyEvent.getCode() == KeyCode.Q || keyEvent.getCode() == KeyCode.Z || keyEvent.getCode() == KeyCode.OPEN_BRACKET) {
-            rotateLeft();
+            rotateLeft(); //Rotates the current piece left
         } else if (keyEvent.getCode() == KeyCode.E || keyEvent.getCode() == KeyCode.C || keyEvent.getCode() == KeyCode.CLOSE_BRACKET ) {
-            rotate(1);
+            rotate(1); // Rotates the current piece right
         } else if(keyEvent.getCode() == KeyCode.SPACE || keyEvent.getCode() == KeyCode.R) {
-            swapPieces();
+            swapPieces();  //Swaps the current and following pieces
         } else if(keyEvent.getCode() == KeyCode.ENTER || keyEvent.getCode() == KeyCode.X) {
-            blockClicked(board.getBlock(blockX, blockY));
-        } else if(keyEvent.getCode() == KeyCode.W || keyEvent.getCode() == KeyCode.UP) {
+            blockClicked(board.getBlock(blockX, blockY)); //Clicks piece
+        } else if(keyEvent.getCode() == KeyCode.W || keyEvent.getCode() == KeyCode.UP) { // Moves cursor up
             if(blockY>0) {
                 blockY-=1;
                 moved = true;
             } else {
                 multimedia.playSound("fail.wav");
             }
-        } else if(keyEvent.getCode() == KeyCode.D || keyEvent.getCode() == KeyCode.RIGHT) {
+        } else if(keyEvent.getCode() == KeyCode.D || keyEvent.getCode() == KeyCode.RIGHT) { // Moves cursor right
             if(blockX<4) {
                 blockX+=1;
                 moved = true;
             } else {
                 multimedia.playSound("fail.wav");
             }
-        } else if(keyEvent.getCode() == KeyCode.S || keyEvent.getCode() == KeyCode.DOWN) {
+        } else if(keyEvent.getCode() == KeyCode.S || keyEvent.getCode() == KeyCode.DOWN) { // Moves cursor down
             if(blockY<4) {
                 blockY+=1;
                 moved = true;
             } else {
             multimedia.playSound("fail.wav");
             }
-        } else if(keyEvent.getCode() == KeyCode.A|| keyEvent.getCode() == KeyCode.LEFT) {
+        } else if(keyEvent.getCode() == KeyCode.A|| keyEvent.getCode() == KeyCode.LEFT) { // Moves cursor left
             if(blockX>0) {
                 blockX-=1;
                 moved = true;
@@ -301,22 +365,33 @@ public class ChallengeScene extends BaseScene {
             }
         }
         if(moved) {
-            board.getBlock(oldBlockX, oldBlockY).resetCursor();
-            board.getBlock(blockX, blockY).paintCursor();
+            board.getBlock(oldBlockX, oldBlockY).resetCursor(); //Removes cursor from previous grid position
+            board.getBlock(blockX, blockY).paintCursor(); //Adds cursor to current grid position
         }
     }
 
+    /**
+     * When a line has been cleared, an animation is played on a set of given GameBlockCoordinates
+     * @param gameBlockCoordinates
+     */
     protected void lineClear(Set<GameBlockCoordinate> gameBlockCoordinates) {
         multimedia.playSound("clear.wav");
         board.fadeOut(gameBlockCoordinates);
     }
 
+    /**
+     * Sets the timer for the next turn
+     * @param delay
+     */
     protected void gameLoop(int delay) {
         timer.widthProperty().set(gameWindow.getWidth());
         Timeline timerBar = createTimeLine(delay);
         timerBar.play();
     }
 
+    /**
+     * Ends the game
+     */
     protected void gameEnd() {
         logger.info("Game Over");
         timer.setVisible(false);
@@ -324,6 +399,11 @@ public class ChallengeScene extends BaseScene {
         multimedia.stopBackground();
     }
 
+    /**
+     * Creates a new timer animation, which fades from green to yellow to red depending on time left
+     * @param delay
+     * @return
+     */
     private Timeline createTimeLine(int delay) {
         Timeline timeline = new Timeline(new KeyFrame(Duration.ZERO, new KeyValue(timer.fillProperty(), Color.GREEN)));
         timeline.getKeyFrames().add(new KeyFrame(Duration.ZERO, new KeyValue(timer.widthProperty(), timer.getWidth())));
@@ -339,10 +419,20 @@ public class ChallengeScene extends BaseScene {
         return timeline;
     }
 
+    /**
+     * Updates highscore when the player's score has changed
+     * @param observable
+     * @param oldValue
+     * @param newValue
+     */
     protected void getHighScore(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
         initialHighscore();
     }
 
+    /**
+     * Checks local file if there is a high score, otherwise it will set the highscore to be the current score if it is
+     * higher
+     */
     protected void initialHighscore() {
         File file = new File("scores.txt");
         int highScore = 0;

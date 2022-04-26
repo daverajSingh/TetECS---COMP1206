@@ -13,6 +13,9 @@ import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
+/**
+ * The InstructionsScene shows the user the basic controls of the game and the pieces that can be played
+ */
 public class InstructionsScene extends BaseScene{
 
     private static final Logger logger = LogManager.getLogger(InstructionsScene.class);
@@ -27,6 +30,9 @@ public class InstructionsScene extends BaseScene{
         logger.info("Creating Instructions Scene");
     }
 
+    /**
+     * Initialise this scene. Called after creation
+     */
     @Override
     public void initialise() {
         //Escape Key Event
@@ -38,6 +44,9 @@ public class InstructionsScene extends BaseScene{
         });
     }
 
+    /**
+     * Build the layout of the scene
+     */
     @Override
     public void build() {
         logger.info("Building " + this.getClass().getName());
@@ -62,6 +71,7 @@ public class InstructionsScene extends BaseScene{
         instructions.setLayoutY(20);
         instructions.setLayoutX(400 - instructions.getLayoutBounds().getWidth());
 
+        //Pieces heading
         var pieces = new Text("Pieces");
         mainPane.getChildren().add(pieces);
         pieces.getStyleClass().add("heading");

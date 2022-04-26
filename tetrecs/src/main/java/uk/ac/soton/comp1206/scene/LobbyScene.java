@@ -1,13 +1,10 @@
 package uk.ac.soton.comp1206.scene;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -26,29 +23,66 @@ import uk.ac.soton.comp1206.ui.GameWindow;
 
 import java.util.*;
 
-
+/**
+ * The LobbyScene allows for the implementation of a lobby system, where users can fina all games, create a game or join
+ * a game that already exists. It also implements a chat system and allows for multiplayer games to start.
+ */
 public class LobbyScene extends BaseScene {
 
     private static final Logger logger = LogManager.getLogger(MenuScene.class);
 
     private Multimedia multimedia = new Multimedia();
 
+    /**
+     * Timer used to refresh channels
+     */
     protected Timer timer;
 
+    /**
+     * Communicator used to find games, create channels and start games on the server
+     */
     protected Communicator communicator;
 
+    /**
+     * Contains all names of channels available
+     */
     protected VBox channelNames = new VBox();
 
+    /**
+     * Allows for the user to change their nickname
+     */
     protected Button nickName;
+
+    /**
+     * Allows for the player to leave the channel
+     */
     protected Button leaveChannel;
+
+    /**
+     * Allows for the player to start the game
+     */
     protected Button startGame;
 
+    /**
+     * Contains all of the functions available when the player has joined a channel
+     */
     protected VBox channelBox;
+
+    /**
+     * Shows the chat to the user
+     */
     protected VBox messagesBox;
+
+    /**
+     * Shows the current players in the channel to the user
+     */
     protected GridPane players;
 
     protected BorderPane borderPane;
 
+    /**
+     * Shows the user the current channel they are in
+     */
     protected Text channelText;
 
 
@@ -62,10 +96,13 @@ public class LobbyScene extends BaseScene {
         this.scene = gameWindow.getScene();
     }
 
+    /**
+     * Initialise this scene. Called after creation
+     */
     @Override
     public void initialise() {
         timer = new Timer();
-        this.scene.setOnKeyPressed(keyEvent -> {
+        this.scene.setOnKeyPressed(keyEvent -> { //Leaves the game and channel when escape is pressed
             if(keyEvent.getCode() == KeyCode.ESCAPE) {
                 gameWindow.startMenu();
                 logger.info("Escape Pressed");
@@ -77,12 +114,16 @@ public class LobbyScene extends BaseScene {
             public void run() {
                 Platform.runLater(() -> communicator.send("LIST"));
             }
-        },1000, 3000);
+        },1000, 3000); //searches for new channels every 3 seconds
         communicator = gameWindow.getCommunicator();
+        //Listens for messages from communicator and handles the command
         communicator.addListener(message -> Platform.runLater(() -> listen(message.trim())));
+        multimedia.playBackgroundMusic("end.wav");
     }
 
-
+    /**
+     * Build the layout of the scene
+     */
     @Override
     public void build() {
         logger.info("Building " + this.getClass().getName());
@@ -99,9 +140,11 @@ public class LobbyScene extends BaseScene {
         lobbyPane.getChildren().add(borderPane);
         borderPane.setMaxSize(lobbyPane.getMaxWidth(), lobbyPane.getMaxHeight());
 
+        //Channel UI - includes channel names and start new channel
         var channelUI = new VBox();
         borderPane.setLeft(channelUI);
 
+        //Creates new start channel button, and logic for creating a new channel
         var startChannel = new Button("Start Channel");
         startChannel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -118,6 +161,7 @@ public class LobbyScene extends BaseScene {
             }
         });
 
+        //Creates new change nickname button, and logic for changing nickname
         nickName = new Button("Edit NickName");
         nickName.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -134,6 +178,7 @@ public class LobbyScene extends BaseScene {
             }
         });
 
+        //Creates leave channel button, and logic for leaving channel
         leaveChannel = new Button("Leave");
         leaveChannel.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -147,6 +192,7 @@ public class LobbyScene extends BaseScene {
             }
         });
 
+        //Initialises VBox for UI when the player has joined a channel
         channelBox = new VBox();
         channelBox.setSpacing(5);
         channelBox.setPadding(new Insets(0, 30, 0, 0));
@@ -154,9 +200,11 @@ public class LobbyScene extends BaseScene {
         channelBox.setMaxWidth(gameWindow.getWidth());
         channelBox.setMaxHeight(gameWindow.getHeight());
 
+        //All of the messages are contained within this borderpane
         var messagesPane = new BorderPane();
         messagesPane.setPrefSize(gameWindow.getWidth()/2, gameWindow.getHeight()/2);
 
+        //Scrollpane allows for chat to scroll down
         var currentMessages = new ScrollPane();
         currentMessages.setBackground(null);
         currentMessages.setPrefSize(messagesPane.getWidth(), messagesPane.getHeight()-100);
@@ -166,6 +214,7 @@ public class LobbyScene extends BaseScene {
             }
         });
 
+        //initialises VBox that contains messages
         messagesBox = new VBox();
         messagesBox.getStyleClass().add("messages");
         messagesBox.setPrefSize(currentMessages.getPrefWidth(), currentMessages.getPrefHeight());
@@ -174,9 +223,10 @@ public class LobbyScene extends BaseScene {
         currentMessages.setContent(messagesBox);
         messagesPane.setCenter(currentMessages);
 
-        var messageEntry = new TextField();
-        var messageConfirm = new Button("Send");
+        var messageEntry = new TextField(); // allows for messages to be entered
+        var messageConfirm = new Button("Send"); // send button
 
+        //When the player presses enter, the communicator will send a message
         messageEntry.setOnKeyPressed(new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
@@ -190,6 +240,7 @@ public class LobbyScene extends BaseScene {
             }
         });
 
+        //When the player presses the send button, the communicator will send a message
         messageConfirm.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent event) {
@@ -201,6 +252,7 @@ public class LobbyScene extends BaseScene {
             }
         });
 
+        //initialises start game button
         startGame = new Button("Start Game");
         startGame.setOnAction(new EventHandler<ActionEvent>() {
             @Override
@@ -209,6 +261,7 @@ public class LobbyScene extends BaseScene {
             }
         });
 
+        //initialises gridpane of players
         players = new GridPane();
         players.setPrefWidth(currentMessages.getPrefWidth());
 
@@ -218,11 +271,13 @@ public class LobbyScene extends BaseScene {
         channelText = new Text();
         channelText.getStyleClass().add("heading");
 
+        //adds all UI to channelBox
         channelBox.getChildren().addAll(channelText, buttonsHBox, messagesPane, chatBox, startGame, players);
 
         this.borderPane.setRight(channelBox);
         channelBox.setVisible(false);
 
+        //Styles all buttons
         Button[] buttons = new Button[]{startChannel, nickName, leaveChannel, startGame};
         for (Button node: buttons) {
             node.hoverProperty().addListener((ov, oldValue, newValue) -> {
@@ -244,14 +299,19 @@ public class LobbyScene extends BaseScene {
         channelUI.getChildren().addAll(startChannel, channelNames);
     }
 
+    /**
+     * Handles messages from communicator
+     * @param s
+     */
     protected void listen(String s) {
-        if (s.contains("CHANNELS")) {
+        if (s.contains("CHANNELS")) { //displays all channels available
             channelNames.getChildren().clear();
             s = s.replace("CHANNELS ", "");
             String[] channelArray = s.split("\n");
             for (String channel: channelArray) {
                 Text textChannel = new Text(channel);
 
+                //allows for user to join the clicked channels
                 textChannel.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent mouseEvent) {
@@ -259,6 +319,7 @@ public class LobbyScene extends BaseScene {
                     }
                 });
 
+                //Styles the channels text
                 textChannel.hoverProperty().addListener((ov, oldValue, newValue) -> {
                     if (newValue) {
                         textChannel.setStyle("-fx-text-fill: yellow");
@@ -269,10 +330,10 @@ public class LobbyScene extends BaseScene {
                 textChannel.getStyleClass().add("channelItem");
                 channelNames.getChildren().add(textChannel);
             }
-        } else if (s.contains("JOIN")) {
+        } else if (s.contains("JOIN")) { //Joining channel
             String[] channelName = s.split(" ");
             channelJoin(channelName[1]);
-        } else if(s.contains("MSG")) {
+        } else if(s.contains("MSG")) {//displays a new message
             s = s.replace("MSG ", "");
             String[] messageArr = s.split(":");
             if(messageArr.length > 1) {
@@ -280,14 +341,20 @@ public class LobbyScene extends BaseScene {
                 message.getStyleClass().add("messages Text");
                 messagesBox.getChildren().add(message);
             }
-        } else if (s.contains("HOST")) {
+        } else if (s.contains("HOST")) {//player is now host of the channel
             startGame.setVisible(true);
         } else if (s.contains("USERS")){
             s=s.replace("USERS ", "");
             setPlayers(s);
+        } else if(s.contains("START")){//starts the game
+            startMultiplayer();
         }
     }
 
+    /**
+     * On joining a channel, all UI is toggled to be visible, and the current channel name is changed
+     * @param channelName
+     */
     protected void channelJoin(String channelName) {
         nickName.setVisible(true);
         leaveChannel.setVisible(true);
@@ -296,6 +363,10 @@ public class LobbyScene extends BaseScene {
         channelText.setText("Current Channel: " + channelName);
     }
 
+    /**
+     * Adds all players to the player list
+     * @param players
+     */
     protected void setPlayers(String players){
         this.players.getChildren().clear();
         String[] playerArr = players.split("\n");
@@ -314,4 +385,10 @@ public class LobbyScene extends BaseScene {
         this.players.setHgap(10);
     }
 
+    /**
+     * Starts the multiplayerScene
+     */
+    protected void startMultiplayer() {
+        gameWindow.loadScene(new MultiplayerScene(gameWindow));
+    }
 }

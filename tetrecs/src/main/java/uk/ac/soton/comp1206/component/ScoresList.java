@@ -13,21 +13,37 @@ import javafx.util.Pair;
 
 import java.util.ArrayList;
 
+/**
+ * A ScoresList will hold and display a list of names and associated scores.
+ * It extends VBox to show a list of scores.
+ * It is bound to an observable list property, which when it is updated, will update the localScores list property in
+ * ScoresList, creating a leaderboard.
+ */
 public class ScoresList extends VBox {
 
     protected SimpleListProperty<Pair<String, Integer>> localScores = new SimpleListProperty<>();
 
     public ScoresList() {
-        ObservableList<Pair<String, Integer>> observableList = FXCollections.observableArrayList(new ArrayList<Pair<String, Integer>>());
-        this.localScores.addListener(this::updateScores);
-        localScores.set(observableList);
+        this.localScores.addListener(this::updateScores); //Listener detects when there is a change to the listProperty
+        localScores.set(FXCollections.observableArrayList(new ArrayList<Pair<String, Integer>>()));
     }
 
+    /**
+     * Listener Method
+     * Renders the new scores given to the localScores list
+     * @param observableValue
+     * @param oldVal
+     * @param newVal
+     */
     protected void updateScores(ObservableValue<?  extends ObservableList<Pair<String, Integer>>> observableValue, ObservableList<Pair<String, Integer>> oldVal,  ObservableList<Pair<String, Integer>> newVal) {
         this.renderScores(newVal);
     }
 
-
+    /**
+     * renderScores will first clear the VBox, then iterate through the given List, creating a Text item that will
+     * display the name of the player and their score, then animating the text item.
+     * @param scores
+     */
     protected void renderScores(ObservableList<Pair<String, Integer>> scores) {
         this.getChildren().clear();
         int x = 1;
@@ -37,12 +53,16 @@ public class ScoresList extends VBox {
             this.getChildren().add(scoreItem);
             this.reveal(scoreItem);
             x++;
-            if(x==11){
+            if(x==11){ //Only shows the top 10 scores
                 break;
             }
         }
     }
 
+    /**
+     * Animates the given Text item to fade in once, and then remain shown to the user
+     * @param item
+     */
     protected void reveal(Text item) {
         FadeTransition fadeTransition = new FadeTransition(Duration.seconds(1), item);
         fadeTransition.setFromValue(0);
@@ -52,6 +72,10 @@ public class ScoresList extends VBox {
         fadeTransition.play();
     }
 
+    /**
+     * Returns the SimpleListProperty so that it can be bound to
+     * @return
+     */
     public ListProperty<Pair<String, Integer>> listProperty() {
         return this.localScores;
     }

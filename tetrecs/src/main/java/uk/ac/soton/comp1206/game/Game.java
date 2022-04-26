@@ -39,23 +39,48 @@ public class Game {
      */
     protected final Grid grid;
 
+    /**
+     * The current GamePiece being played
+     */
     protected GamePiece currentPiece;
+
+    /**
+     * The next GamePiece to be played
+     */
     protected GamePiece followingPiece;
 
+    /**
+     * Current Score of the player
+     */
     protected IntegerProperty score = new SimpleIntegerProperty(0);
+
+    /**
+     * Current Level of the game
+     */
     protected IntegerProperty level = new SimpleIntegerProperty(0);
+
+    /**
+     * Current Lives left of the player
+     */
     protected IntegerProperty lives = new SimpleIntegerProperty(3);
+
+    /**
+     * Current Game Multiplier
+     */
     protected IntegerProperty multiplier = new SimpleIntegerProperty(1);
 
+    //Listeners used for Game Logic
     protected NextPieceListener nextPieceListener;
     protected LineClearedListener lineClearedListener;
     protected GameLoopListener gameLoopListener;
     protected GameEndListener gameEndListener;
 
+    //Timer - detects when a turn should end
     protected ScheduledExecutorService timer;
     protected int initialDelay = 12000;
     protected ScheduledFuture<?> newLoop;
 
+    //ArrayList of Local Scores available
     protected ArrayList<Pair<String, Integer>> scores = new ArrayList<>();
 
     /**
@@ -123,11 +148,15 @@ public class Game {
             return false;
         }
     }
+
+    /**
+     * Handels what should happen after a piece is palyed
+     */
     public void afterPiece() {
         int lines = 0;
         HashSet<GameBlockCoordinate> blocksToBeCleared = new HashSet<>();
 
-        for(int x=0; x < cols; x++) { //Vertical
+        for(int x=0; x < cols; x++) { //Vertical Lines
             int countX = 0;
             for(int y=0; y < rows; y++) {
                 if(grid.get(x,y) == 0) break;
@@ -137,12 +166,12 @@ public class Game {
                 lines+=1;
                 for(int y=0; y < rows; y++) {
                     GameBlockCoordinate coordinate = new GameBlockCoordinate(x,y);
-                    blocksToBeCleared.add(coordinate);
+                    blocksToBeCleared.add(coordinate); //Add all GameBlockCoordinates to HashSet to be cleared
                 }
             }
         }
 
-        for(int y=0; y < rows; y++) {//Horizontal
+        for(int y=0; y < rows; y++) {//Horizontal Lines
             int countY = 0;
             for(int x=0; x < cols; x++) {
                 if(grid.get(x,y) == 0) break;
@@ -152,30 +181,40 @@ public class Game {
                 lines+=1;
                 for(int x=0; x < cols; x++) {
                     GameBlockCoordinate coordinate = new GameBlockCoordinate(x,y);
-                    blocksToBeCleared.add(coordinate);
+                    blocksToBeCleared.add(coordinate);//Add all GameBlockCoordinates to HashSet to be cleared
                 }
             }
         }
 
-        if(lines>0){
-            clear(blocksToBeCleared);
-            score(lines, blocksToBeCleared.size());
-            this.multiplier.set(this.multiplier.add(1).get());
+        if(lines>0){ //If there is a line to clear
+            clear(blocksToBeCleared); // Clears Blocks
+            score(lines, blocksToBeCleared.size()); // Increments Score
+            this.multiplier.set(this.multiplier.add(1).get()); // Increments Multiplier
             if(lineClearedListener != null) {
-                lineClearedListener.lineClear(blocksToBeCleared);
+                lineClearedListener.lineClear(blocksToBeCleared); //Calls Listener
                 logger.info("Clear Lines");
             }
         } else {
-            this.multiplier.set(1);
+            this.multiplier.set(1); //Resets Multiplier
         }
     }
 
+    /**
+     * Iterates through a given HashSet of GameBlockCoordinates and clears the GameBlock
+     * @param blocks
+     */
     public void clear(HashSet<GameBlockCoordinate> blocks) {
         for (GameBlockCoordinate block: blocks) {
             grid.set(block.getX(), block.getY(), 0);
         }
     }
 
+    /**
+     * Increases the Score depending on the number of lines and blocks cleared.
+     * Also increments Level every 1000 points
+     * @param lines
+     * @param blocks
+     */
     public void score(int lines, int blocks){
         int scoreToAdd = lines*blocks*10*this.multiplier.get();
         this.score.set(this.score.add(scoreToAdd).get());
@@ -217,6 +256,9 @@ public class Game {
         return gamePiece;
     }
 
+    /**
+     * Reassigns currentPiece and followingPiece after a piece has been played
+     */
     public void nextPiece() {
         currentPiece = followingPiece;
         followingPiece = spawnPiece();
@@ -239,33 +281,50 @@ public class Game {
         this.gameEndListener = gameEndListener;
     }
 
+    /**
+     * Rotates the currentPiece
+     */
     public void rotateCurrentPiece() {
         currentPiece.rotate();
     };
 
+    /**
+     * Swaps currentPiece and followingPiece
+     */
     public void swapCurrentPiece() {
         GamePiece temp = followingPiece;
         followingPiece = currentPiece;
         currentPiece = temp;
     }
 
+    /**
+     * Returns the currentPiece
+     * @return
+     */
     public GamePiece getCurrentPiece() {
         return currentPiece;
     }
 
+    /**
+     * Returns the followingPiece
+     * @return
+     */
     public GamePiece getFollowingPiece() {
         return followingPiece;
     }
 
-    public ArrayList<Pair<String, Integer>> getScores() {
-        return scores;
-    }
-
+    /**
+     * Returns the timerDelay, which is calculated based on level
+     * @return
+     */
     public int getTimerDelay() {
         int delay = initialDelay - (500 * level.get());
         return Math.max(delay, 2500);
     }
 
+    /**
+     * Triggers GameLopp when the player does not play a piece
+     */
     public void gameLoop() {
         nextPiece();
         if(lives.get() == 0) {
@@ -280,21 +339,33 @@ public class Game {
         startLoop();
     }
 
+    /**
+     * Starts a new timer
+     */
     public void startLoop() {
         newLoop = timer.schedule(this::gameLoop, getTimerDelay(), TimeUnit.MILLISECONDS);
         gameLoopListener.gameLoop(getTimerDelay());
     }
 
+    /**
+     * Restarts timer when the player has played a piece
+     */
     public void restartLoop() {
         newLoop.cancel(false);
         startLoop();
     }
 
+    /**
+     * Ends the Game
+     */
     public void endGame() {
         logger.info("Game Has Ended");
         timer.shutdownNow();
     }
 
+    /**
+     * Calls the gameEndListener when a game has ended
+     */
     public void gameOver() {
         if(gameEndListener != null){
             Platform.runLater(() -> gameEndListener.gameEnd(this));

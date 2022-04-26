@@ -185,10 +185,19 @@ public class GameBoard extends GridPane {
         }
     }
 
+    /**
+     * Sets the RightClickedListener for the GameBoard
+     * @param rightClickedListener
+     */
     public void setOnRightClicked(RightClickedListener rightClickedListener) {
         this.rightClickedListener = rightClickedListener;
     }
 
+    /**
+     * When a Block is RightClicked, this wil trigger
+     * @param event
+     * @param block
+     */
     private void rightClicked(MouseEvent event, GameBlock block) {
         logger.info("Block Right clicked: {}", block);
 
@@ -197,15 +206,27 @@ public class GameBoard extends GridPane {
         }
     }
 
+    /**
+     * Displays a given GamePiece in the centre of a 3x3 GameBoard.
+     * Used for previewing current and following GamePieces
+     * @param gamePiece
+     */
     public void pieceToDisplay(GamePiece gamePiece) {
         this.grid.clearGrid();
         this.grid.playPiece(gamePiece, 1,1);
     }
 
+    /**
+     * Sets the centre block of a 3x3 GameBoard to have an indicator painted
+     */
     public void paintCentre() {
         this.getBlock(1,1).centre();
     }
 
+    /**
+     * Triggers the Fade Out Animation for each block from a given Set of GameBlockCoordinates
+     * @param gameBlockCoordinates
+     */
     public void fadeOut(Set<GameBlockCoordinate> gameBlockCoordinates) {
         for (GameBlockCoordinate gameBlockCoordinate: gameBlockCoordinates){
             blocks[gameBlockCoordinate.getX()][gameBlockCoordinate.getY()].fadeOut();
