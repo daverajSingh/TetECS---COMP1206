@@ -76,12 +76,19 @@ public class Game {
     protected GameLoopListener gameLoopListener;
     protected GameEndListener gameEndListener;
 
-    //Timer - detects when a turn should end
+    /**
+     * Timer - detects when a turn should end
+     */
     protected ScheduledExecutorService timer;
     protected int initialDelay = 12000;
+    /**
+     * Used to initiate new timer when a loop has finished
+     */
     protected ScheduledFuture<?> newLoop;
 
-    //ArrayList of Local Scores available
+    /**
+     * ArrayList of Local Scores available
+     */
     protected ArrayList<Pair<String, Integer>> scores = new ArrayList<>();
 
     /**
@@ -140,6 +147,7 @@ public class Game {
     /**
      * Handle what should happen when a particular block is clicked
      * @param gameBlock the block that was clicked
+     * @return True or False whether a block has been clicked and placed
      */
     public boolean blockClicked(GameBlock gameBlock) {
         //Get the position of this block
@@ -207,7 +215,7 @@ public class Game {
 
     /**
      * Iterates through a given HashSet of GameBlockCoordinates and clears the GameBlock
-     * @param blocks
+     * @param blocks A HashSet Of Blocks to be set to 0
      */
     public void clear(HashSet<GameBlockCoordinate> blocks) {
         for (GameBlockCoordinate block: blocks) {
@@ -218,8 +226,8 @@ public class Game {
     /**
      * Increases the Score depending on the number of lines and blocks cleared.
      * Also increments Level every 1000 points
-     * @param lines
-     * @param blocks
+     * @param lines Number of Lines Cleared
+     * @param blocks Number of Blocks Cleared
      */
     public void score(int lines, int blocks){
         int scoreToAdd = lines*blocks*10*this.multiplier.get();
@@ -256,6 +264,10 @@ public class Game {
         return rows;
     }
 
+    /**
+     * Creates a new Random Piece
+     * @return A new GamePiece
+     */
     public GamePiece spawnPiece() {
         Random random = new Random();
         int randomNum = random.nextInt(15);
@@ -306,7 +318,7 @@ public class Game {
 
     /**
      * Returns the currentPiece
-     * @return
+     * @return currentPiece
      */
     public GamePiece getCurrentPiece() {
         return currentPiece;
@@ -314,7 +326,7 @@ public class Game {
 
     /**
      * Returns the followingPiece
-     * @return
+     * @return followingPiece
      */
     public GamePiece getFollowingPiece() {
         return followingPiece;
@@ -322,7 +334,7 @@ public class Game {
 
     /**
      * Returns the timerDelay, which is calculated based on level
-     * @return
+     * @return How long th timer should last in ms
      */
     public int getTimerDelay() {
         int delay = initialDelay - (500 * level.get());

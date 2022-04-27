@@ -103,13 +103,12 @@ public class Grid {
         return rows;
     }
 
-
     /**
      * Returns whether a piece can be played in a given position
-     * @param gamePiece
-     * @param placeX
-     * @param placeY
-     * @return
+     * @param gamePiece A given GamePiece
+     * @param placeX X Coordinate
+     * @param placeY Y Coordinate
+     * @return Whether a piece cna be played (True/False)
      */
     public Boolean canPlayPiece(GamePiece gamePiece, int placeX, int placeY) {
         placeX -= 1;
@@ -131,9 +130,9 @@ public class Grid {
 
     /**
      * Plays a given GamePiece by its centre in a given position
-     * @param gamePiece
-     * @param placeX
-     * @param placeY
+     * @param gamePiece A given GamePiece
+     * @param placeX X Coordinate
+     * @param placeY Y Coordinate
      */
     public void playPiece(GamePiece gamePiece, int placeX, int placeY) {
         placeX -=1;

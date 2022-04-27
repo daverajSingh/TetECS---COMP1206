@@ -20,8 +20,14 @@ import java.util.ArrayList;
  * ScoresList, creating a leaderboard.
  */
 public class ScoresList extends VBox {
-
+    /**
+     * All Scores of players
+     */
     protected SimpleListProperty<Pair<String, Integer>> localScores = new SimpleListProperty<>();
+
+    /**
+     * All Scores of players within the same lobby
+     */
     protected ArrayList<String> multiplayerPlayers = new ArrayList<>();
 
     public ScoresList() {
@@ -43,7 +49,7 @@ public class ScoresList extends VBox {
     /**
      * renderScores will first clear the VBox, then iterate through the given List, creating a Text item that will
      * display the name of the player and their score, then animating the text item.
-     * @param scores
+     * @param scores List of scores of all players
      */
     protected void renderScores(ObservableList<Pair<String, Integer>> scores) {
         this.getChildren().clear();
@@ -66,7 +72,7 @@ public class ScoresList extends VBox {
 
     /**
      * Animates the given Text item to fade in once, and then remain shown to the user
-     * @param item
+     * @param item Text Node to be animated
      */
     protected void reveal(Text item) {
         FadeTransition fadeTransition = new FadeTransition(Duration.seconds(1), item);
@@ -79,7 +85,7 @@ public class ScoresList extends VBox {
 
     /**
      * Returns the SimpleListProperty so that it can be bound to
-     * @return
+     * @return localScores
      */
     public ListProperty<Pair<String, Integer>> listProperty() {
         return this.localScores;

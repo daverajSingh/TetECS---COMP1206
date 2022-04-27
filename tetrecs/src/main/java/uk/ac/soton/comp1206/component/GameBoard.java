@@ -209,7 +209,7 @@ public class GameBoard extends GridPane {
     /**
      * Displays a given GamePiece in the centre of a 3x3 GameBoard.
      * Used for previewing current and following GamePieces
-     * @param gamePiece
+     * @param gamePiece GamePiece to be displayed
      */
     public void pieceToDisplay(GamePiece gamePiece) {
         this.grid.clearGrid();
@@ -225,7 +225,7 @@ public class GameBoard extends GridPane {
 
     /**
      * Triggers the Fade Out Animation for each block from a given Set of GameBlockCoordinates
-     * @param gameBlockCoordinates
+     * @param gameBlockCoordinates Set of GameBlockCoordinates that will be animated
      */
     public void fadeOut(Set<GameBlockCoordinate> gameBlockCoordinates) {
         for (GameBlockCoordinate gameBlockCoordinate: gameBlockCoordinates){
@@ -235,7 +235,7 @@ public class GameBoard extends GridPane {
 
     /**
      * Returns grid of given GameBoard
-     * @return
+     * @return grid
      */
     public Grid getGrid() {
         return grid;

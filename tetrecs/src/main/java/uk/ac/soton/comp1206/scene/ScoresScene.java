@@ -70,15 +70,22 @@ public class ScoresScene extends BaseScene {
      */
     protected Communicator communicator;
 
-    protected boolean isMultiplayer = false;
     /**
-     * Create a new scene, passing in the GameWindow the scene will be displayed in
-     *
-     * @param gameWindow the game window
+     * whether a game is multiplayer or single player
      */
+    protected boolean isMultiplayer = false;
 
+    /**
+     * All scores of players in a multiplayer lobby
+     */
     protected SimpleListProperty<Pair<String, Integer>> multiplayerScores;
 
+    /**
+     * Create a new scene, passing in the GameWindow the scene will be displayed in, and the game state
+     *
+     * @param gameWindow the game window
+     * @param game the game state
+     */
     public ScoresScene(GameWindow gameWindow, Game game) {
         super(gameWindow);
         gameState = game;
@@ -93,6 +100,8 @@ public class ScoresScene extends BaseScene {
      * Create a new scene, passing in the GameWindow the scene will be displayed in, and passing in multiplayer scores
      * which will displayed as a scorelist
      * @param gameWindow the game window
+     * @param game the game state
+     * @param scores the scores of all players in the multiplayer lobby
      */
     public ScoresScene(GameWindow gameWindow, Game game, SimpleListProperty<Pair<String, Integer>> scores) {
         super(gameWindow);
@@ -292,8 +301,8 @@ public class ScoresScene extends BaseScene {
 
     /**
      * Adds a given name and score to the local file, and sorts the localScoreList to be displayed
-     * @param name
-     * @param score
+     * @param name name of player
+     * @param score score of player
      */
     public void addScore(String name, int score) {
         File file = new File("scores.txt");
@@ -329,7 +338,7 @@ public class ScoresScene extends BaseScene {
 
     /**
      * Handles when the communicator receives a message
-     * @param message
+     * @param message message received from communicator
      */
     protected void receiveCommunication(String message) {
         if(message.contains("NEWSCORE")) { //server has received highscore

@@ -83,6 +83,9 @@ public class LobbyScene extends BaseScene {
      */
     protected Set<String> playerSet = new HashSet<>();
 
+    /**
+     * The BorderPane of the current scene
+     */
     protected BorderPane borderPane;
 
     /**
@@ -312,7 +315,7 @@ public class LobbyScene extends BaseScene {
 
     /**
      * Handles messages from communicator
-     * @param s
+     * @param s message from communicator
      */
     protected void listen(String s) {
         if (s.contains("CHANNELS")) { //displays all channels available
@@ -367,7 +370,7 @@ public class LobbyScene extends BaseScene {
 
     /**
      * On joining a channel, all UI is toggled to be visible, and the current channel name is changed
-     * @param channelName
+     * @param channelName name of channel to join
      */
     protected void channelJoin(String channelName) {
         nickName.setVisible(true);
@@ -380,7 +383,7 @@ public class LobbyScene extends BaseScene {
 
     /**
      * Adds all players to the player GridPane and playerSet
-     * @param players
+     * @param players All Players in the channel
      */
     protected void setPlayers(String players){
         this.players.getChildren().clear();

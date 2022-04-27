@@ -104,6 +104,9 @@ public class GameWindow {
         loadScene(new ScoresScene(this, game));
     }
 
+    /**
+     * Starts the Lobby Scene
+     */
     public void startLobby() {
         loadScene(new LobbyScene(this));
     }

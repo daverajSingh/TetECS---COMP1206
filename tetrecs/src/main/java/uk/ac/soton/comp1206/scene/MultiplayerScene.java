@@ -74,6 +74,7 @@ public class MultiplayerScene extends ChallengeScene{
      * Create a new MultiPlayer challenge scene
      *
      * @param gameWindow the Game Window
+     * @param playerSet Set of Players in the multiplayer game
      */
     public MultiplayerScene(GameWindow gameWindow, Set<String> playerSet) {
         super(gameWindow);
@@ -97,7 +98,7 @@ public class MultiplayerScene extends ChallengeScene{
 
     /**
      * Handles Keyboard input
-     * @param keyEvent
+     * @param keyEvent keyboard input
      */
     @Override
     protected void keyboardInput(KeyEvent keyEvent) {
@@ -216,7 +217,7 @@ public class MultiplayerScene extends ChallengeScene{
 
     /**
      * Changes the style of a player's name on the leaderboard when a player gets a game over or leaves
-     * @param userName
+     * @param userName name of player
      */
     protected void endUser(String userName) {
         leaderboard.strikeThrough(userName);
@@ -224,7 +225,7 @@ public class MultiplayerScene extends ChallengeScene{
 
     /**
      * Handles messages from communicator
-     * @param s
+     * @param s message received from communicator
      */
     protected void listen(String s) {
         if(s.contains("MSG")) { //chat message
@@ -273,7 +274,7 @@ public class MultiplayerScene extends ChallengeScene{
 
     /**
      * Updates GameBoards when a message is received
-     * @param board
+     * @param board String representation of a GameBoard
      */
     public void updatePlayerBoard(String board) {
         String player = board.split(":")[0];

@@ -42,6 +42,9 @@ public class ChallengeScene extends BaseScene {
 
     protected Game game;
 
+    /**
+     * Multimedia class is used to output both sounds and background music
+     */
     protected Multimedia multimedia = new Multimedia();
 
     /**
@@ -265,8 +268,8 @@ public class ChallengeScene extends BaseScene {
 
     /**
      * changes the "PieceBoards" to display the correct current and following pieces
-     * @param gamePiece
-     * @param followingGamePiece
+     * @param gamePiece current GamePiece
+     * @param followingGamePiece following GamePiece
      */
     protected void nextPiece(GamePiece gamePiece, GamePiece followingGamePiece) {
         pieceBoard.pieceToDisplay(gamePiece);
@@ -275,7 +278,7 @@ public class ChallengeScene extends BaseScene {
 
     /**
      * Rotates the given piece clockwise
-     * @param gameBlock
+     * @param gameBlock The GameBlock to be rotated
      */
     protected void rotate(GameBlock gameBlock) {
         rotate(1);
@@ -290,7 +293,7 @@ public class ChallengeScene extends BaseScene {
 
     /**
      * Uses the game's rotate method to rotate pieces and update pieceboards
-     * @param rotations
+     * @param rotations Number of Rotations Clockwise
      */
     protected void rotate(int rotations) {
         for(int x = 0; x< rotations; x++) {
@@ -302,7 +305,7 @@ public class ChallengeScene extends BaseScene {
 
     /**
      * Swaps the current and following pieces
-     * @param gameBlock
+     * @param gameBlock GameBlock that detected Swap
      */
     protected void swapPieces(GameBlock gameBlock) {
         swapPieces();
@@ -320,7 +323,7 @@ public class ChallengeScene extends BaseScene {
 
     /**
      * Handles keyboard input
-     * @param keyEvent
+     * @param keyEvent Keyboard Input
      */
     protected void keyboardInput(KeyEvent keyEvent) {
         int oldBlockX = blockX;
@@ -377,7 +380,7 @@ public class ChallengeScene extends BaseScene {
 
     /**
      * When a line has been cleared, an animation is played on a set of given GameBlockCoordinates
-     * @param gameBlockCoordinates
+     * @param gameBlockCoordinates A Set of Coordinates for a grid
      */
     protected void lineClear(Set<GameBlockCoordinate> gameBlockCoordinates) {
         multimedia.playSound("clear.wav");
@@ -386,7 +389,7 @@ public class ChallengeScene extends BaseScene {
 
     /**
      * Sets the timer for the next turn
-     * @param delay
+     * @param delay Representing how long the timer will last.
      */
     protected void gameLoop(int delay) {
         timer.widthProperty().set(gameWindow.getWidth());

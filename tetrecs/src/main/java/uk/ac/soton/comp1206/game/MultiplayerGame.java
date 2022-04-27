@@ -35,6 +35,7 @@ public class MultiplayerGame extends Game{
      *
      * @param cols number of columns
      * @param rows number of rows
+     * @param gameWindow the current GameWindow
      */
     public MultiplayerGame(int cols, int rows, GameWindow gameWindow) {
         super(cols, rows);
@@ -100,8 +101,8 @@ public class MultiplayerGame extends Game{
     /**
      * Increases the Score depending on the number of lines and blocks cleared. Also increments Level every 1000 points.
      * Sends score to the server.
-     * @param lines
-     * @param blocks
+     * @param lines number of lines cleared
+     * @param blocks number of blocks cleared
      */
     @Override
     public void score(int lines, int blocks) {
@@ -111,7 +112,7 @@ public class MultiplayerGame extends Game{
 
     /**
      * Handles messages from communicator
-     * @param message
+     * @param message message received from communicator
      */
     protected void listen(String message) {
         if(message.contains("PIECE")) {

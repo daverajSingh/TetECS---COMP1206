@@ -24,7 +24,7 @@ public class Multimedia {
 
     /**
      * Uses the backgroundPlayer and plays the given music
-     * @param music
+     * @param music music to be played
      */
     public void playBackgroundMusic(String music) {
         String musicToBePlayed = Multimedia.class.getResource("/music/" + music).toExternalForm();
@@ -52,7 +52,7 @@ public class Multimedia {
 
     /**
      * Uses the mediaPlayer and plays the given sound
-     * @param sound
+     * @param sound sound to be played
      */
     public void playSound(String sound) {
         String soundToPlay = Multimedia.class.getResource("/sounds/" + sound).toExternalForm();

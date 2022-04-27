@@ -19,6 +19,9 @@ import uk.ac.soton.comp1206.ui.GameWindow;
  */
 public class InstructionsScene extends BaseScene{
 
+    /**
+     * The Multimedia Class is used to play any music or sound resource
+     */
     protected Multimedia multimedia = new Multimedia();
 
     private static final Logger logger = LogManager.getLogger(InstructionsScene.class);
