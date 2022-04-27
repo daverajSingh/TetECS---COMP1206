@@ -221,9 +221,9 @@ public class ChallengeScene extends BaseScene {
         //Setting BlockClickListener for the followingPiece preview
         followingPieceBoard.setOnBlockClick(this::swapPieces);
 
-
         //Adding a listener to the score property so that the highscore element can be changed
         game.scoreProperty().addListener(this::getHighScore);
+
     }
 
     /**
@@ -234,7 +234,6 @@ public class ChallengeScene extends BaseScene {
         boolean piecePlayed = game.blockClicked(gameBlock);
         if(piecePlayed) {
             multimedia.playSound("place.wav");
-            board.getBlock(blockX, blockY).paintCursor();
             game.restartLoop();
         } else {
             multimedia.playSound("fail.wav");
@@ -259,7 +258,6 @@ public class ChallengeScene extends BaseScene {
         logger.info("Initialising Challenge");
         game.start();
         this.multimedia.playBackgroundMusic("game.wav");
-        board.getBlock(blockX, blockY).paintCursor();
         //Handling keyboard inputs - setting on key pressed listener
         scene.setOnKeyPressed(this::keyboardInput);
         initialHighscore();
