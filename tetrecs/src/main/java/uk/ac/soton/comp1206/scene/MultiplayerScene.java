@@ -1,133 +1,164 @@
 package uk.ac.soton.comp1206.scene;
 
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
+import javafx.application.Platform;
+import javafx.beans.property.SimpleListProperty;
+import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextAlignment;
+import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.GameBoard;
+import uk.ac.soton.comp1206.component.ScoresList;
 import uk.ac.soton.comp1206.game.MultiplayerGame;
 import uk.ac.soton.comp1206.network.Communicator;
-import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
+/**
+ * The MultiplayerScene. Holds the UI for the Multiplayer mode in the game.
+ */
 public class MultiplayerScene extends ChallengeScene{
-    private static final Logger logger = LogManager.getLogger(ChallengeScene.class);
+    private static final Logger logger = LogManager.getLogger(MultiplayerScene.class);
 
-    protected MultiplayerGame game;
-
-    protected VBox channelBox;
+    /**
+     * Shows the chat to the user
+     */
     protected VBox messagesBox;
 
+    /**
+     * Communicator used to send messages to the server, and receive messages from the server
+     */
     protected Communicator communicator;
+
+    /**
+     * TextField used as a chat input
+     */
+    protected TextField textField = new TextField();
+
+
+    /**
+     * Holds all scores of all players in the game
+     */
+    protected SimpleListProperty<Pair<String, Integer>> multiplayerScores = new SimpleListProperty<>();
+
+    /**
+     * Shows the scores of players in the game
+     */
+    protected ScoresList leaderboard;
+
+    /**
+     * Extension - Holds previews of GameBoards of all players in the game
+     */
+    protected VBox boardSideBar = new VBox();
+
+    /**
+     * A Set of all players in the game
+     */
+    protected Set<String> players;
+
+    /**
+     * A HashMap of players to their respective GameBoard
+     */
+    protected HashMap<String, GameBoard> playerToGameboard;
 
     /**
      * Create a new MultiPlayer challenge scene
      *
      * @param gameWindow the Game Window
      */
-    public MultiplayerScene(GameWindow gameWindow) {
+    public MultiplayerScene(GameWindow gameWindow, Set<String> playerSet) {
         super(gameWindow);
-        logger.info("");
+        this.multiplayerScores.set(FXCollections.observableArrayList(new ArrayList<Pair<String, Integer>>()));
+        this.players = playerSet;
     }
 
+    /**
+     * Initialise the scene and starts the multiplayer game.
+     * Asks the server for scores, and initialises the sidebar of all gameboards
+     */
     @Override
     public void initialise() {
         super.initialise();
         communicator = gameWindow.getCommunicator();
+        //Listens for messages from communicator and handles the command
+        communicator.addListener(message -> Platform.runLater(() -> listen(message.trim())));
+        communicator.send("SCORES");
+        initialisePlayerBoards();
     }
 
+    /**
+     * Handles Keyboard input
+     * @param keyEvent
+     */
+    @Override
+    protected void keyboardInput(KeyEvent keyEvent) {
+        super.keyboardInput(keyEvent);
+        if (keyEvent.getCode() == KeyCode.T) { //Opens Chat
+            if (!textField.isVisible()) {
+                textField.setVisible(true);
+                String message = textField.getText();
+                if (message != null) {
+                    communicator.send("MSG " + message);
+                    textField.clear();
+                }
+            } else {
+                textField.setVisible(false);
+                textField.clear();
+            }
+        }
+        if (keyEvent.getCode() == KeyCode.ESCAPE) { //Exits scene
+            if (textField.isVisible()) {
+                textField.setVisible(false);
+                textField.clear();
+            } else {
+                multimedia.stopBackground();
+                game.endGame();
+                multimedia.playSound("transition.wav");
+                gameEnd();
+                gameWindow.startMenu();
+                communicator.send("DIE");
+                logger.info("Escape Pressed");
+            }
+        }
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            if (textField.isVisible()) {
+                String message = textField.getText();
+                if (message != null) {
+                    communicator.send("MSG " + message);
+                    textField.clear();
+                }
+                textField.setVisible(false);
+            }
+        }
+    }
+
+    /**
+     * Set up the game object and model
+     */
     @Override
     public void setupGame() {
-        super.setupGame();
+        logger.info("Starting a new multiplayer game");
+
+        game = new MultiplayerGame(5,  5, this.gameWindow);
     }
 
+    /**
+     * Build the Multiplayer window
+     */
     @Override
     public void build() {
-        logger.info("Building " + this.getClass().getName());
+        super.build();
 
-        setupGame();
-
-        this.scene = gameWindow.getScene();
-
-        root = new GamePane(gameWindow.getWidth(),gameWindow.getHeight());
-
-        var challengePane = new StackPane();
-        challengePane.setMaxWidth(gameWindow.getWidth());
-        challengePane.setMaxHeight(gameWindow.getHeight());
-        challengePane.getStyleClass().add("challenge-background");
-        root.getChildren().add(challengePane);
-
-        var score = new Text("Score: ");
-        var scoreValue = new Text("0");
-        scoreValue.textProperty().bind(game.scoreProperty().asString());
-        var scoreBox = new HBox(score, scoreValue);
-        score.getStyleClass().add("heading");
-        scoreValue.getStyleClass().add("heading");
-
-        var level = new Text("Level: ");
-        var levelValue = new Text("1");
-        levelValue.textProperty().bind(game.levelProperty().asString());
-        var levelBox = new HBox(level, levelValue);
-        level.getStyleClass().add("heading");
-        levelValue.getStyleClass().add("heading");
-
-        var multiplier = new Text("Multiplier: ");
-        var multiplierValue = new Text("1");
-        multiplierValue.textProperty().bind(game.multiplierProperty().asString());
-        var multiplierBox = new HBox(multiplier, multiplierValue);
-        multiplier.getStyleClass().add("heading");
-        multiplierValue.getStyleClass().add("heading");
-
-        var lives = new Text("Lives: ");
-        var livesValue = new Text("3");
-        livesValue.textProperty().bind(game.livesProperty().asString());
-        var livesBox = new HBox(lives, livesValue);
-        lives.getStyleClass().add("heading");
-        livesValue.getStyleClass().add("heading");
-
-        HBox stats = new HBox(20, scoreBox, levelBox, multiplierBox, livesBox);
-        challengePane.getChildren().add(stats);
-        stats.setAlignment(Pos.TOP_CENTER);
-        stats.setTranslateY(20);
-
-        var highScore = new Text("Highscore: ");
-        var highScoreText = new Text();
-        highScoreText.textProperty().bind(highScoreValue.asString());
-        var highScoreBox = new VBox(highScore, highScoreText);
-        highScore.getStyleClass().add("heading");
-        highScoreText.getStyleClass().add("heading");
-
-        challengePane.getChildren().add(highScoreBox);
-        highScoreBox.setAlignment(Pos.TOP_CENTER);
-        highScoreBox.setTranslateY(100);
-        highScoreBox.setTranslateX(285);
-
-        pieceBoard = new GameBoard(3,3,100,100);
-        pieceBoard.setAlignment(Pos.CENTER);
-
-        followingPieceBoard = new GameBoard(3,3,75,75);
-        followingPieceBoard.setAlignment(Pos.CENTER);
-        pieceBoard.setTranslateY(-10);
-        pieceBoard.setTranslateX(12.5);
-        pieceBoard.paintCentre();
-
-        channelBox = new VBox();
-        channelBox.setSpacing(5);
-        channelBox.setPadding(new Insets(0, 30, 0, 0));
-        channelBox.setAlignment(Pos.CENTER_RIGHT);
-        channelBox.setMaxWidth(gameWindow.getWidth() /4);
-        channelBox.setMaxHeight(gameWindow.getHeight() /4);
-
+        //Chat Window within the multiplayer window
         var messagesPane = new BorderPane();
         messagesPane.setPrefSize(gameWindow.getWidth()/8, gameWindow.getHeight()/8);
 
@@ -148,83 +179,55 @@ public class MultiplayerScene extends ChallengeScene{
         currentMessages.setContent(messagesBox);
         messagesPane.setCenter(currentMessages);
 
-        var messageEntry = new TextField();
-        var messageConfirm = new Button("Send");
+        var chatHeading = new Text("Chat: <Press T to Chat>");
+        chatHeading.setTextAlignment(TextAlignment.CENTER);
+        chatHeading.getStyleClass().add("heading");
+        currentMessages.getStyleClass().add("scroller");
 
-        messageEntry.setOnKeyPressed(new EventHandler<KeyEvent>() {
-            @Override
-            public void handle(KeyEvent keyEvent) {
-                if(keyEvent.getCode() == KeyCode.ENTER) {
-                    String message = messageEntry.getText();
-                    if(message != null) {
-                        communicator.send("MSG " + message);
-                        messageEntry.clear();
-                    }
-                }
-            }
-        });
+        var chatBox = new HBox(chatHeading, textField);
+        chatBox.setMaxWidth(gameWindow.getWidth());
+        textField.setPrefWidth(gameWindow.getWidth() - chatHeading.getLayoutBounds().getWidth());
+        textField.setAlignment(Pos.CENTER);
+        textField.setVisible(false);
 
-        messageConfirm.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                String message = messageEntry.getText();
-                if(message != null) {
-                    communicator.send("MSG " + message);
-                    messageEntry.clear();
-                }
-            }
-        });
+        var chat = new VBox(chatBox, messagesPane);
 
-        var chatBox = new HBox(messageEntry, messageConfirm);
+        //Shows the score of players in the game
+        leaderboard = new ScoresList();
+        leaderboard.setAlignment(Pos.CENTER);
+        leaderboard.setTranslateY(-50);
+        leaderboard.setTranslateX(25);
+        this.multiplayerScores.bind(leaderboard.listProperty());
 
-        var sideBar = new VBox(pieceBoard, followingPieceBoard, messagesPane, chatBox);
+        var sideBar = new VBox(leaderboard, pieceBoard, followingPieceBoard);
 
         sideBar.setAlignment(Pos.CENTER_RIGHT);
         sideBar.setTranslateX(-75);
 
-        timer = new Rectangle(gameWindow.getWidth(), 10);
-        var timerPane = new StackPane();
-        timerPane.getChildren().add(timer);
-
-        var mainPane = new BorderPane();
-        challengePane.getChildren().add(mainPane);
-
         mainPane.setRight(sideBar);
-        mainPane.setTop(timerPane);
-        timerPane.setAlignment(Pos.TOP_LEFT);
+        mainPane.setBottom(chat);
 
-        board = new GameBoard(game.getGrid(),gameWindow.getWidth()/2,gameWindow.getWidth()/2);
-        mainPane.setCenter(board);
-
-        //Handle block on Gameboard grid being clicked
-        board.setOnBlockClick(this::blockClicked);
-
-        //Setting Piece Listener
-        game.setNextPieceListener(this::nextPiece);
-
-        game.setLineClearedListener(this::lineClear);
-
-        game.setOnGameLoop(this::gameLoop);
-
+        //Setting GameEndListener
         game.setGameEndListener(game -> {
             gameEnd();
-            gameWindow.startScores(game);
+            gameWindow.loadScene(new ScoresScene(gameWindow, game, this.multiplayerScores));
         });
-
-        //Setting Right Clicked Listener
-        board.setOnRightClicked(this::rotate);
-
-        pieceBoard.setOnBlockClick(this::rotate);
-
-        followingPieceBoard.setOnBlockClick(this::swapPieces);
-
-        scene.setOnKeyPressed(this::keyboardInput);
-
-        game.scoreProperty().addListener(this::getHighScore);
     }
 
+    /**
+     * Changes the style of a player's name on the leaderboard when a player gets a game over or leaves
+     * @param userName
+     */
+    protected void endUser(String userName) {
+        leaderboard.strikeThrough(userName);
+    }
+
+    /**
+     * Handles messages from communicator
+     * @param s
+     */
     protected void listen(String s) {
-        if(s.contains("MSG")) {
+        if(s.contains("MSG")) { //chat message
             s = s.replace("MSG ", "");
             String[] messageArr = s.split(":");
             if (messageArr.length > 1) {
@@ -232,7 +235,58 @@ public class MultiplayerScene extends ChallengeScene{
                 message.getStyleClass().add("messages Text");
                 messagesBox.getChildren().add(message);
             }
+        } else if (s.contains("SCORES")) { //Scores of all players in the game
+            s = s.replace("SCORES ", "");
+            String[] playerScoreLives = s.split("\n");
+            this.multiplayerScores.clear();
+            for (String item: playerScoreLives) {
+                String[] stats = item.split(":");
+                var entry = new Pair<String, Integer>(stats[0], Integer.parseInt(stats[1]));
+                this.multiplayerScores.add(entry);
+            }
+        } else if(s.contains("DIE")) { //A player has lost or left
+            s = s.replace("DIE ", "");
+            endUser(s);
+        } else if(s.contains(("BOARD"))) { //A representation of a player's GameBoard
+            s=s.replace("BOARD ", "");
+            updatePlayerBoard(s);
         }
     }
 
+    /**
+     * Initialises the sidebar which contains previews of all player's GameBoards
+     */
+    public void initialisePlayerBoards() {
+        playerToGameboard = new HashMap<>();
+        for (String player: players) {
+            GameBoard gameBoard = new GameBoard(5,5, 75,75);
+            Text name = new Text(player);
+            name.getStyleClass().add("heading");
+            name.setTextAlignment(TextAlignment.CENTER);
+            boardSideBar.getChildren().addAll(name, gameBoard);
+            playerToGameboard.put(player, gameBoard);
+        }
+        mainPane.setLeft(boardSideBar);
+        boardSideBar.setAlignment(Pos.CENTER_LEFT);
+        boardSideBar.setMaxHeight(this.gameWindow.getHeight());
+    }
+
+    /**
+     * Updates GameBoards when a message is received
+     * @param board
+     */
+    public void updatePlayerBoard(String board) {
+        String player = board.split(":")[0];
+        String[] values = board.split(":")[1].split(" ");
+        if(players.contains(player)) {
+            GameBoard gameBoard = playerToGameboard.get(player);
+            int i = 0;
+            for (int x = 0; x < this.game.getCols(); x++) {
+                for (int y = 0; y < this.game.getRows(); y++) {
+                    gameBoard.getGrid().set(x, y, Integer.parseInt(values[i]));
+                    i++;
+                }
+            }
+        }
+    }
 }

@@ -100,7 +100,7 @@ public class MenuScene extends BaseScene {
         multiPlayer.setOnAction(this::startMultiplayer);
         instructions.setOnAction(this::startInstructions);
         exit.setOnAction((ActionEvent event) -> {
-            Platform.exit();
+            System.exit(0);
         });
 
         //Editing what happens when hover
@@ -114,7 +114,6 @@ public class MenuScene extends BaseScene {
             });
             node.setStyle("-fx-text-fill: white");
         }
-
 
     }
 
@@ -138,6 +137,7 @@ public class MenuScene extends BaseScene {
      */
     private void startGame(ActionEvent event) {
         gameWindow.startChallenge();
+        multimedia.playSound("transition.wav");
         this.multimedia.stopBackground();
     }
 
@@ -147,6 +147,7 @@ public class MenuScene extends BaseScene {
      */
     private void startMultiplayer(ActionEvent event) {
         gameWindow.startLobby();
+        multimedia.playSound("transition.wav");
         multimedia.stopBackground();
     }
 
@@ -156,6 +157,7 @@ public class MenuScene extends BaseScene {
      */
     private void startInstructions(ActionEvent event) {
         gameWindow.startInstructions();
+        multimedia.playSound("transition.wav");
         multimedia.stopBackground();
     }
 }

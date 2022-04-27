@@ -22,6 +22,7 @@ import java.util.ArrayList;
 public class ScoresList extends VBox {
 
     protected SimpleListProperty<Pair<String, Integer>> localScores = new SimpleListProperty<>();
+    protected ArrayList<String> multiplayerPlayers = new ArrayList<>();
 
     public ScoresList() {
         this.localScores.addListener(this::updateScores); //Listener detects when there is a change to the listProperty
@@ -49,7 +50,11 @@ public class ScoresList extends VBox {
         int x = 1;
         for(Pair pair: scores) {
             Text scoreItem = new Text(pair.getKey() + " - " + pair.getValue());
-            scoreItem.getStyleClass().add("scorelist");
+            if(multiplayerPlayers.contains(pair.getKey())) {
+                scoreItem.getStyleClass().add("scorelistStrike");
+            } else {
+                scoreItem.getStyleClass().add("scorelist");
+            }
             this.getChildren().add(scoreItem);
             this.reveal(scoreItem);
             x++;
@@ -78,6 +83,23 @@ public class ScoresList extends VBox {
      */
     public ListProperty<Pair<String, Integer>> listProperty() {
         return this.localScores;
+    }
+
+    /**
+     * Takes the given string and searches for a pair that contains that string, then changes style class of the
+     * Text item to have a strikethrough.
+     * @param item
+     */
+    public void strikeThrough(String item) {
+        int x = 0;
+        this.multiplayerPlayers.add(item);
+        for (Pair pair: localScores) {
+            if(pair.getKey().equals(item)){
+                this.getChildren().get(x).getStyleClass().add("scorelistStrike");
+            } else {
+                x++;
+            }
+        }
     }
 
 }

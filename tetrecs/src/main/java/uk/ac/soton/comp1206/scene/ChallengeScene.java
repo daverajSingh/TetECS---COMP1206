@@ -16,6 +16,7 @@ import javafx.util.Duration;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.soton.comp1206.game.MultiplayerGame;
 import uk.ac.soton.comp1206.media.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
@@ -77,6 +78,11 @@ public class ChallengeScene extends BaseScene {
      * The timer UI element, displaying how long the user has left to play the current piece
      */
     protected Rectangle timer;
+
+    /**
+     * The BorderPane of the current scene
+     */
+    protected BorderPane mainPane;
 
     /**
      * Create a new Single Player challenge scene
@@ -153,10 +159,9 @@ public class ChallengeScene extends BaseScene {
         highScoreText.getStyleClass().add("heading");
 
         //Adjusts Alignment for the HighScore element
-        challengePane.getChildren().add(highScoreBox);
         highScoreBox.setAlignment(Pos.TOP_CENTER);
-        highScoreBox.setTranslateY(100);
-        highScoreBox.setTranslateX(285);
+        highScoreBox.setTranslateY(-30);
+        highScoreBox.setTranslateX(22.5);
 
         //Current Piece preview
         pieceBoard = new GameBoard(3,3,100,100);
@@ -170,7 +175,7 @@ public class ChallengeScene extends BaseScene {
         pieceBoard.paintCentre();
 
         //VBox of Pieces
-        var pieces = new VBox(pieceBoard, followingPieceBoard);
+        var pieces = new VBox(highScoreBox, pieceBoard, followingPieceBoard);
         pieces.setAlignment(Pos.CENTER_RIGHT);
         pieces.setTranslateX(-75);
 
@@ -179,7 +184,7 @@ public class ChallengeScene extends BaseScene {
         var timerPane = new StackPane();
         timerPane.getChildren().add(timer);
 
-        var mainPane = new BorderPane();
+        mainPane = new BorderPane();
         challengePane.getChildren().add(mainPane);
 
         mainPane.setRight(pieces);
@@ -216,8 +221,6 @@ public class ChallengeScene extends BaseScene {
         //Setting BlockClickListener for the followingPiece preview
         followingPieceBoard.setOnBlockClick(this::swapPieces);
 
-        //Handling keyboard inputs - setting on key pressed listener
-        scene.setOnKeyPressed(this::keyboardInput);
 
         //Adding a listener to the score property so that the highscore element can be changed
         game.scoreProperty().addListener(this::getHighScore);
@@ -257,6 +260,8 @@ public class ChallengeScene extends BaseScene {
         game.start();
         this.multimedia.playBackgroundMusic("game.wav");
         board.getBlock(blockX, blockY).paintCursor();
+        //Handling keyboard inputs - setting on key pressed listener
+        scene.setOnKeyPressed(this::keyboardInput);
         initialHighscore();
     }
 
@@ -316,16 +321,18 @@ public class ChallengeScene extends BaseScene {
     }
 
     /**
-     * Detects keyboard input and does the correct action
+     * Handles keyboard input
      * @param keyEvent
      */
     protected void keyboardInput(KeyEvent keyEvent) {
         int oldBlockX = blockX;
         int oldBlockY = blockY;
         boolean moved = false;
-        if(keyEvent.getCode() == KeyCode.ESCAPE) { //Exits fame
-            multimedia.stopBackground();
-            gameWindow.startMenu();
+        if(keyEvent.getCode() == KeyCode.ESCAPE) { //Exits frame
+            gameEnd();
+            if(!(game instanceof MultiplayerGame)) {
+                gameWindow.startMenu();
+            }
             logger.info("Escape Pressed");
         } else if(keyEvent.getCode() == KeyCode.Q || keyEvent.getCode() == KeyCode.Z || keyEvent.getCode() == KeyCode.OPEN_BRACKET) {
             rotateLeft(); //Rotates the current piece left
@@ -393,10 +400,13 @@ public class ChallengeScene extends BaseScene {
      * Ends the game
      */
     protected void gameEnd() {
-        logger.info("Game Over");
-        timer.setVisible(false);
-        game.endGame();
-        multimedia.stopBackground();
+        if(!(game instanceof MultiplayerGame)) { //Ends game only if the game is a challenge scene game
+            logger.info("Game Over");
+            timer.setVisible(false);
+            game.endGame();
+            multimedia.stopBackground();
+            multimedia.playSound("transition.wav");
+        }
     }
 
     /**

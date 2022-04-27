@@ -12,6 +12,7 @@ import uk.ac.soton.comp1206.event.GameEndListener;
 import uk.ac.soton.comp1206.event.GameLoopListener;
 import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
+import uk.ac.soton.comp1206.media.Multimedia;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -82,6 +83,11 @@ public class Game {
 
     //ArrayList of Local Scores available
     protected ArrayList<Pair<String, Integer>> scores = new ArrayList<>();
+
+    /**
+     * Multimedia class
+     */
+    protected Multimedia multimedia = new Multimedia();
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -222,6 +228,7 @@ public class Game {
         int level = this.score.get() / 1000;
         if(this.level.get() != level) {
             this.level.set(level);
+            multimedia.playSound("level.wav");
         }
     }
 
@@ -331,6 +338,7 @@ public class Game {
             gameOver();
         } else {
             lives.set(lives.get() - 1);
+            multimedia.playSound("lifelose.wav");
             multiplier.set(1);
         }
         if(gameLoopListener != null){

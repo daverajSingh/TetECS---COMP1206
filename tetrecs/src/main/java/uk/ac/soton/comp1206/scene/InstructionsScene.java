@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.component.GameBoard;
 import uk.ac.soton.comp1206.game.GamePiece;
+import uk.ac.soton.comp1206.media.Multimedia;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
@@ -17,6 +18,8 @@ import uk.ac.soton.comp1206.ui.GameWindow;
  * The InstructionsScene shows the user the basic controls of the game and the pieces that can be played
  */
 public class InstructionsScene extends BaseScene{
+
+    protected Multimedia multimedia = new Multimedia();
 
     private static final Logger logger = LogManager.getLogger(InstructionsScene.class);
 
@@ -38,6 +41,7 @@ public class InstructionsScene extends BaseScene{
         //Escape Key Event
         scene.setOnKeyPressed(keyEvent -> {
             if(keyEvent.getCode() == KeyCode.ESCAPE) {
+                multimedia.playSound("transition.wav");
                 gameWindow.startMenu();
                 logger.info("Escape Pressed");
             }

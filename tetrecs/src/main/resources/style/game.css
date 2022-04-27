@@ -134,6 +134,16 @@
     -fx-border-color: black;
     -fx-effect: dropshadow(gaussian, black, 1, 1.0, 1, 1);
 }
+.scorelistStrike {
+    -fx-font-size: 20px;
+    -fx-font-weight: 700;
+    -fx-font-family: 'Orbitron';
+    -fx-fill: white;
+    -fx-stroke: black;
+    -fx-border-color: black;
+    -fx-effect: dropshadow(gaussian, black, 1, 1.0, 1, 1);
+    -fx-strikethrough: true;
+}
 
 .scoreitem {
 
@@ -196,7 +206,7 @@
 }
 
 .messages Text {
-    -fx-fill: black;
+    -fx-fill: white;
     -fx-font-family: 'Orbitron';
 }
 

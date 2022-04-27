@@ -233,4 +233,11 @@ public class GameBoard extends GridPane {
         }
     }
 
+    /**
+     * Returns grid of given GameBoard
+     * @return
+     */
+    public Grid getGrid() {
+        return grid;
+    }
 }

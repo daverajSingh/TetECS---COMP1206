@@ -78,6 +78,11 @@ public class LobbyScene extends BaseScene {
      */
     protected GridPane players;
 
+    /**
+     * Contains the names of the current players in the channel
+     */
+    protected Set<String> playerSet = new HashSet<>();
+
     protected BorderPane borderPane;
 
     /**
@@ -85,6 +90,10 @@ public class LobbyScene extends BaseScene {
      */
     protected Text channelText;
 
+    /**
+     * Current nickname of player
+     */
+    protected String name;
 
     /**
      * Create a new scene, passing in the GameWindow the scene will be displayed in
@@ -104,6 +113,8 @@ public class LobbyScene extends BaseScene {
         timer = new Timer();
         this.scene.setOnKeyPressed(keyEvent -> { //Leaves the game and channel when escape is pressed
             if(keyEvent.getCode() == KeyCode.ESCAPE) {
+                multimedia.playSound("transition.wav");
+                multimedia.stopBackground();
                 gameWindow.startMenu();
                 logger.info("Escape Pressed");
                 communicator.send("PART");
@@ -172,8 +183,6 @@ public class LobbyScene extends BaseScene {
                 Optional<String> result = dialog.showAndWait();
                 if(result.isPresent()) {
                     communicator.send("NICK " + result.get());
-                } else {
-                    communicator.send("NICK player");
                 }
             }
         });
@@ -199,6 +208,7 @@ public class LobbyScene extends BaseScene {
         channelBox.setAlignment(Pos.CENTER_RIGHT);
         channelBox.setMaxWidth(gameWindow.getWidth());
         channelBox.setMaxHeight(gameWindow.getHeight());
+        channelBox.getStyleClass().add("gameBox");
 
         //All of the messages are contained within this borderpane
         var messagesPane = new BorderPane();
@@ -206,7 +216,7 @@ public class LobbyScene extends BaseScene {
 
         //Scrollpane allows for chat to scroll down
         var currentMessages = new ScrollPane();
-        currentMessages.setBackground(null);
+        currentMessages.getStyleClass().add("scroller");
         currentMessages.setPrefSize(messagesPane.getWidth(), messagesPane.getHeight()-100);
         currentMessages.needsLayoutProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue) {
@@ -224,6 +234,7 @@ public class LobbyScene extends BaseScene {
         messagesPane.setCenter(currentMessages);
 
         var messageEntry = new TextField(); // allows for messages to be entered
+        messageEntry.getStyleClass().add("TextField");
         var messageConfirm = new Button("Send"); // send button
 
         //When the player presses enter, the communicator will send a message
@@ -348,6 +359,9 @@ public class LobbyScene extends BaseScene {
             setPlayers(s);
         } else if(s.contains("START")){//starts the game
             startMultiplayer();
+        } else if(s.contains("NICK")) {//detects when the player changes their nickname
+            s=s.replace("NICK ", "");
+            name = s;
         }
     }
 
@@ -360,22 +374,25 @@ public class LobbyScene extends BaseScene {
         leaveChannel.setVisible(true);
         channelBox.setVisible(true);
         startGame.setVisible(false);
+        multimedia.playSound("pling.wav");
         channelText.setText("Current Channel: " + channelName);
     }
 
     /**
-     * Adds all players to the player list
+     * Adds all players to the player GridPane and playerSet
      * @param players
      */
     protected void setPlayers(String players){
         this.players.getChildren().clear();
+        this.playerSet.clear();
         String[] playerArr = players.split("\n");
         for (int x=0; x<playerArr.length; x++) {
+            playerSet.add(playerArr[x]);
             Text text = new Text(playerArr[x]);
             text.getStyleClass().add("heading");
             if(x < 3) {
                 this.players.add(text, x, 0);
-            } else if(x < 5){
+            } else if(x < 6){
                 this.players.add(text, x-3, 1);
             } else {
                 this.players.add(text, x-6, 2);
@@ -389,6 +406,9 @@ public class LobbyScene extends BaseScene {
      * Starts the multiplayerScene
      */
     protected void startMultiplayer() {
-        gameWindow.loadScene(new MultiplayerScene(gameWindow));
+        playerSet.remove(name);
+        multimedia.playSound("transition.wav");
+        gameWindow.loadScene(new MultiplayerScene(gameWindow, playerSet));
+        multimedia.stopBackground();
     }
 }

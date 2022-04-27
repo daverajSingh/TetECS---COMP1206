@@ -70,12 +70,15 @@ public class ScoresScene extends BaseScene {
      */
     protected Communicator communicator;
 
-
+    protected boolean isMultiplayer = false;
     /**
      * Create a new scene, passing in the GameWindow the scene will be displayed in
      *
      * @param gameWindow the game window
      */
+
+    protected SimpleListProperty<Pair<String, Integer>> multiplayerScores;
+
     public ScoresScene(GameWindow gameWindow, Game game) {
         super(gameWindow);
         gameState = game;
@@ -87,18 +90,45 @@ public class ScoresScene extends BaseScene {
     }
 
     /**
+     * Create a new scene, passing in the GameWindow the scene will be displayed in, and passing in multiplayer scores
+     * which will displayed as a scorelist
+     * @param gameWindow the game window
+     */
+    public ScoresScene(GameWindow gameWindow, Game game, SimpleListProperty<Pair<String, Integer>> scores) {
+        super(gameWindow);
+        gameState = game;
+        score = game.scoreProperty().get(); //sets the score that the player achieved
+        //Sets the localscorelist to the scores in multiplayer
+        this.localScoreList.set(FXCollections.observableArrayList(new ArrayList<Pair<String, Integer>>()));
+        this.remoteScoresList.set(FXCollections.observableArrayList(new ArrayList<Pair<String, Integer>>()));
+        multiplayerScores = scores;
+        logger.info("Creating Scores Scene");
+        communicator = gameWindow.getCommunicator();
+        isMultiplayer = true;
+    }
+
+    /**
      * Initialise this scene. Called after creation
      */
     @Override
     public void initialise() {
         multimedia.playSound("explode.wav");
         multimedia.playBackgroundMusic("end.wav");
-        loadScores();
-        addScore(this.name, this.score);
+        if(!isMultiplayer) {
+            loadScores();
+            addScore(this.name, this.score);
+        } else {
+            this.localScoreList.addAll(multiplayerScores);
+            this.localScoreList.sort((a, b) -> b.getValue() - a.getValue());
+        }
         this.scene.setOnKeyPressed(keyEvent -> {
             if(keyEvent.getCode() == KeyCode.ESCAPE) {
+                multimedia.playSound("transition.wav");
                 gameWindow.startMenu();
                 logger.info("Escape Pressed");
+                if(isMultiplayer) {
+                    communicator.send("PART");
+                }
             }
         });
         loadOnlineScores();
@@ -172,11 +202,13 @@ public class ScoresScene extends BaseScene {
         this.remoteScoresList.bind(onlineScoresList.listProperty());
 
         //Asks the user for their name
-        var nameDialog = new TextInputDialog();
-        nameDialog.setTitle("Score Input");
-        nameDialog.setContentText("Enter Name To Add to Leaderboard");
-        Optional<String> result = nameDialog.showAndWait();
-        this.name = result.orElse("Anon");
+        if(!isMultiplayer) {
+            var nameDialog = new TextInputDialog();
+            nameDialog.setTitle("Score Input");
+            nameDialog.setContentText("Enter Name To Add to Leaderboard");
+            Optional<String> result = nameDialog.showAndWait();
+            this.name = result.orElse("Anon");
+        }
 
         //Exit to main menu button
         var exit = new Button("Exit To Main Menu");
@@ -302,7 +334,7 @@ public class ScoresScene extends BaseScene {
     protected void receiveCommunication(String message) {
         if(message.contains("NEWSCORE")) { //server has received highscore
             logger.info("Server received highscore");
-        } else { //Otherwise, the message is going to be received highscores from the server
+        } else if (message.contains("HISCORES")) { //Otherwise, the message is going to be received highscores from the server
             message = message.replace("HISCORES", "");
             String[] pairs = message.split("\n");
             for (String pair : pairs) { //adds scores and name to remoteScoresList
@@ -323,5 +355,9 @@ public class ScoresScene extends BaseScene {
     protected void startMenu(ActionEvent event) {
         gameWindow.startMenu();
         multimedia.stopBackground();
+        multimedia.playSound("transition.wav");
+        if(isMultiplayer) {
+            communicator.send("PART");
+        }
     }
 }
